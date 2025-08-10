@@ -17,16 +17,14 @@
     .side{ background:linear-gradient(180deg,#ffffff,#fbfffe); border-radius:12px; padding:14px; box-shadow:0 10px 26px rgba(3,56,48,0.04); height:720px; overflow:auto }
     .side h2{ margin:0 0 6px 0 }
     .meta{ color:var(--muted); font-size:14px }
-    .info-row{ display:flex; justify-content:space-between; align-items:center; padding:10px; background:#f7faf8; border-radius:8px; margin-top:12px }
     .btn{ display:inline-block; padding:10px 12px; border-radius:10px; font-weight:700; border:0; cursor:pointer }
     .btn-primary{ background:var(--accent); color:#fff }
-    .small{ font-size:13px; color:var(--muted) }
     .governorate-label {
       background: transparent;
       border: none;
       box-shadow: none;
       color: #073642;
-      font-size: 10px;
+      font-size: 11px;
       font-weight: bold;
       text-shadow: 1px 1px 2px #fff, -1px -1px 2px #fff, 1px -1px 2px #fff, -1px 1px 2px #fff;
       pointer-events: none;
@@ -61,19 +59,19 @@
   <script>
     const GEOJSON_URL = 'TN-gouvernorats.geojson';
     
-    // ملاحظة هامة: يجب استبدال الروابط الوهمية بالروابط الحقيقية لنماذج Google Forms
+    // ملاحظة: مفاتيح هذا الكائن يجب أن تطابق الأسماء في حقل 'gouv_fr'
     const FORM_LINKS = {
-      "Ariana": "https://forms.gle/ariana-form",
-      "Beja": "https://forms.gle/beja-form",
       "Ben Arous": "https://forms.gle/benarous-form",
+      "Ariana": "https://forms.gle/ariana-form",
       "Bizerte": "https://forms.gle/bizerte-form",
+      "Béja": "https://forms.gle/beja-form",
       "Gabes": "https://forms.gle/gabes-form",
       "Gafsa": "https://forms.gle/gafsa-form",
       "Jendouba": "https://forms.gle/jendouba-form",
       "Kairouan": "https://forms.gle/kairouan-form",
       "Kasserine": "https://forms.gle/kasserine-form",
       "Kebili": "https://forms.gle/kebili-form",
-      "Kef": "https://forms.gle/kef-form",
+      "Le Kef": "https://forms.gle/kef-form",
       "Mahdia": "https://forms.gle/mahdia-form",
       "Manouba": "https://forms.gle/manouba-form",
       "Medenine": "https://forms.gle/medenine-form",
@@ -117,13 +115,13 @@
       layer.setStyle({ weight: 2.5, color: '#014d43', fillColor: 'var(--hover-color)', fillOpacity: 0.9 });
       if(!L.Browser.ie && !L.Browser.opera && !L.Browser.edge){ layer.bringToFront(); }
       
-      // تحديث الشريط الجانبي عند التحويم
       const props = layer.feature.properties;
-      const name = props.NAME_1 || props.name || props.governorate || 'غير معروف';
+      const name = props.gouv_ar || 'غير معروف'; // <-- الإصلاح هنا
       gNameEl.textContent = name;
       openFormBtn.disabled = false;
       openFormBtn.onclick = () => { 
-        const link = FORM_LINKS[name] || '#';
+        const linkKey = props.gouv_fr; // <-- الإصلاح هنا
+        const link = FORM_LINKS[linkKey] || '#';
         if (link !== '#') {
             window.open(link, '_blank');
         } else {
@@ -139,9 +137,8 @@
     }
 
     function onEachFeature(feature, layer){
-      alert(JSON.stringify(feature.properties)); 
-      // هذا هو السطر الذي تم إصلاحه ليتأكد من إيجاد الاسم
-      const name = feature.properties.NAME_1 || feature.properties.name || feature.properties.governorate || 'غير معروف';
+      // هذا هو السطر الذي تم إصلاحه بشكل نهائي
+      const name = feature.properties.gouv_ar || 'غير معروف';
       
       layer.bindTooltip(name, {
           permanent: true, 
@@ -154,8 +151,8 @@
           mouseout: resetHighlight,
           click: (e) => {
               const props = e.target.feature.properties;
-              const name = props.NAME_1 || props.name || props.governorate || 'غير معروف';
-              const link = FORM_LINKS[name] || '#';
+              const linkKey = props.gouv_fr; // <-- الإصلاح هنا
+              const link = FORM_LINKS[linkKey] || '#';
               if (link !== '#') {
                   window.open(link, '_blank');
               } else {
@@ -183,4 +180,3 @@
   </script>
 </body>
 </html>
-
