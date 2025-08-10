@@ -66,7 +66,7 @@
       "Beja": "https://forms.gle/beja-form", "Gabes": "https://forms.gle/gabes-form", "Gafsa": "https://forms.gle/gafsa-form",
       "Jendouba": "https://forms.gle/jendouba-form", "Kairouan": "https://forms.gle/kairouan-form", "Kasserine": "https://forms.gle/kasserine-form",
       "Kebili": "https://forms.gle/kebili-form", "Le Kef": "https://forms.gle/kef-form", "Mahdia": "https://forms.gle/mahdia-form",
-      "Mannouba": "https://forms.gle/manouba-form", "Medenine": "https://forms.gle/medenine-form", "Monastir": "https://forms.gle/monastir-form",
+      "Mannouba": "https://forms.gle/manouba-form", "Mednine": "https://forms.gle/medenine-form", "Monastir": "https://forms.gle/monastir-form",
       "Nabeul": "https://forms.gle/nabeul-form", "Sfax": "https://forms.gle/sfax-form", "Sidi Bouzid": "https://forms.gle/sidibouzid-form",
       "Siliana": "https://forms.gle/siliana-form", "Sousse": "https://forms.gle/sousse-form", "Tataouine": "https://forms.gle/tataouine-form",
       "Tozeur": "https://forms.gle/tozeur-form", "Tunis": "https://forms.gle/tunis-form", "Zaghouan": "https://forms.gle/zaghouan-form"
@@ -88,19 +88,11 @@
     const gNameEl = document.getElementById('g-name');
     const openFormBtn = document.getElementById('openFormBtn');
     
-    function getGovernorateName(props) {
-        return props.gouv_ar || props.NAME_1 || props.name || 'غير معروف';
-    }
-    
-    function getGovernorateLinkKey(props) {
-        return props.gouv_fr || props.NAME_1 || props.name;
+    function styleFeature(){
+      return { color: '#0b6b5e', weight: 1.2, fillColor: '#e6f_9f4', fillOpacity: 0.8 };
     }
 
-    function styleFeature(feature){
-      return { color: '#0b6b5e', weight: 1.2, fillColor: '#e6f9f4', fillOpacity: 0.8 };
-    }
-
-    let governorateGroups = {};
+    let governorateLayers = {};
 
     async function loadGeoJSON(){
       try{
@@ -108,70 +100,63 @@
         if(!resp.ok) throw new Error('فشل تحميل GeoJSON');
         const data = await resp.json();
 
-        // **المنطق الجديد: تجميع الولايات**
+        // **المنطق الجديد: تجميع القطع حسب المعرّف الفريد**
+        const featuresById = {};
         data.features.forEach(feature => {
-            const arabicName = getGovernorateName(feature.properties);
-            if (arabicName === 'غير معروف') return;
-
-            if (!governorateGroups[arabicName]) {
-                governorateGroups[arabicName] = {
-                    layers: [],
-                    properties: feature.properties
-                };
+            const id = feature.properties.gouv_id;
+            if (!id) return;
+            if (!featuresById[id]) {
+                featuresById[id] = [];
             }
-            governorateGroups[arabicName].layers.push(L.geoJSON(feature));
+            featuresById[id].push(feature);
         });
 
-        // **المنطق الجديد: عرض المجموعات على الخريطة**
-        for (const name in governorateGroups) {
-            const groupData = governorateGroups[name];
-            const featureGroup = L.featureGroup(groupData.layers)
+        // **المنطق الجديد: إنشاء مجموعة واحدة لكل ولاية**
+        for (const id in featuresById) {
+            const features = featuresById[id];
+            const props = features[0].properties; // All pieces share the same properties
+            const arabicName = props.gouv_ar || 'غير معروف';
+            const frenchName = props.gouv_fr;
+
+            const layers = features.map(feature => L.geoJSON(feature));
+            const featureGroup = L.featureGroup(layers)
                 .setStyle(styleFeature())
                 .addTo(map);
 
-            featureGroup.bindTooltip(name, {
+            featureGroup.bindTooltip(arabicName, {
                 permanent: true, 
                 direction: 'center', 
                 className: 'governorate-label'
             });
 
             featureGroup.on({
-                mouseover: (e) => {
+                mouseover: () => {
                     featureGroup.setStyle({ weight: 2.5, color: '#014d43', fillColor: 'var(--hover-color)', fillOpacity: 0.9 });
                     featureGroup.bringToFront();
-                    gNameEl.textContent = name;
+                    gNameEl.textContent = arabicName;
                     openFormBtn.disabled = false;
+                    openFormBtn.onclick = () => {
+                        const link = FORM_LINKS[frenchName] || '#';
+                        if (link !== '#') window.open(link, '_blank');
+                        else alert('لا يوجد رابط تسجيل لهذه المحافظة بعد.');
+                    };
                 },
-                mouseout: (e) => {
+                mouseout: () => {
                     featureGroup.setStyle(styleFeature());
                     gNameEl.textContent = 'اختر محافظة';
                     openFormBtn.disabled = true;
                 },
-                click: (e) => {
-                    const linkKey = getGovernorateLinkKey(groupData.properties);
-                    const link = FORM_LINKS[linkKey] || '#';
-                    if (link !== '#') {
-                        window.open(link, '_blank');
-                    } else {
-                        alert('لا يوجد رابط تسجيل لهذه المحافظة بعد.');
-                    }
+                click: () => {
+                    const link = FORM_LINKS[frenchName] || '#';
+                    if (link !== '#') window.open(link, '_blank');
+                    else alert('لا يوجد رابط تسجيل لهذه المحافظة بعد.');
                 }
             });
-            
-            // Assign the click handler to the button when hovering
-            featureGroup.on('mouseover', () => {
-                const linkKey = getGovernorateLinkKey(groupData.properties);
-                openFormBtn.onclick = () => {
-                     const link = FORM_LINKS[linkKey] || '#';
-                     if (link !== '#') window.open(link, '_blank');
-                };
-            });
         }
-        map.fitBounds(L.featureGroup(Object.values(governorateGroups).map(g => g.layers[0])).getBounds(), { padding:[20,20] });
-
+        
       } catch(e) { 
-        console.error('Error loading GeoJSON:', e); 
-        alert('تعذر تحميل حدود المحافظات.'); 
+        console.error('Error:', e); 
+        alert('حدث خطأ أثناء تحميل الخريطة.'); 
       }
     }
 
