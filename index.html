@@ -139,6 +139,7 @@
     }
 
     function onEachFeature(feature, layer){
+      alert(JSON.stringify(feature.properties)); 
       // هذا هو السطر الذي تم إصلاحه ليتأكد من إيجاد الاسم
       const name = feature.properties.NAME_1 || feature.properties.name || feature.properties.governorate || 'غير معروف';
       
@@ -182,3 +183,4 @@
   </script>
 </body>
 </html>
+
