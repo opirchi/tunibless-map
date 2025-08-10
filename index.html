@@ -20,6 +20,7 @@
       background: #ffffff;
       border-bottom: 1px solid #ddd;
       text-align: center;
+      flex-shrink: 0;
     }
     .header-container h1 {
       margin: 0;
@@ -39,6 +40,33 @@
       width: 100%;
       background: #fff;
     }
+    /* --- تصميم جديد: لوحة المعلومات --- */
+    .info-panel {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 260px;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 1000;
+      transition: background-color 0.3s;
+    }
+    .info-panel h4 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      color: #005a8d;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+    }
+    .info-panel p {
+      margin: 5px 0;
+      font-size: 14px;
+    }
+    .info-panel .default-text {
+        color: #777;
+    }
     .label {
       background: rgba(255, 255, 255, 0.85);
       border: none;
@@ -53,33 +81,10 @@
     }
     .leaflet-popup-content-wrapper {
       border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-    .leaflet-popup-content {
-      margin: 15px;
-      padding: 0;
-      font-size: 14px;
-      line-height: 1.6;
     }
     .leaflet-popup-content b {
       font-size: 18px;
       color: #005a8d;
-      display: block;
-      margin-bottom: 10px;
-    }
-    .popup-link {
-      display: inline-block;
-      margin-top: 10px;
-      padding: 8px 15px;
-      background-color: #007bff;
-      color: white !important;
-      text-decoration: none;
-      border-radius: 5px;
-      font-weight: bold;
-      transition: background-color 0.2s ease;
-    }
-    .popup-link:hover {
-      background-color: #0056b3;
     }
     #loader {
       position: absolute;
@@ -110,35 +115,27 @@
   <div class="map-container">
     <div id="map"></div>
     <div id="loader"></div>
+    <div id="info-panel" class="info-panel">
+      <h4>معلومات الولاية</h4>
+      <p class="default-text">مرّر الفأرة فوق أي ولاية لعرض التفاصيل هنا.</p>
+    </div>
   </div>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
+    // --- بيانات جديدة: قم بتعبئة هذه البيانات بمعلوماتك الحقيقية ---
+    // المفتاح يجب أن يكون مطابقاً للاسم الفرنسي (gouv_fr) في ملف GeoJSON
+    const governorateData = {
+      "Tunis": { members: 1500, coordinator: "أحمد بن علي" },
+      "Sfax": { members: 1250, coordinator: "فاطمة القروي" },
+      "Sousse": { members: 980, coordinator: "محمد أمين" },
+      "Ariana": { members: 750, coordinator: "سارة العبيدي" },
+      "Nabeul": { members: 1100, coordinator: "علياء الشاذلي" },
+      // ... أضف بقية الولايات هنا
+    };
+    
     const formsLinks = {
-      "Ariana": "https://docs.google.com/forms/d/e/1FAIpQLSeIGzfgByZSGhInjFxcxslf5vyqScEaKQHm4VsXFtYv-miJCQ/viewform",
-      "Beja": "https://docs.google.com/forms/d/e/1FAIpQLScDsTtGJyP-ZstwxkztGMKgZGmDPMKeyWGR1KMxrSdr0e7QcA/viewform",
-      "Ben Arous": "https://docs.google.com/forms/d/e/1FAIpQLSeLsolZbo5wQ-93bH3ffVphPx2KEIkboswDQ87v9MosOb5txA/viewform",
-      "Bizerte": "https://docs.google.com/forms/d/e/1FAIpQLSeoSe8ZFLXXh4nyCPX-qYalNkOAMpQnCYDMD2kskpEvwJ4JiA/viewform",
-      "Gabes": "https://docs.google.com/forms/d/e/1FAIpQLSeonk4YES79GrsuzczWTxp7NxBPinCiOdR5VpEPvXWpTEw8XA/viewform",
-      "Gafsa": "https://docs.google.com/forms/d/e/1FAIpQLSdypdTUT8Bb7nLg8WVeJ8w030mbZJ8NCU3ltH4hC3YM19q3RA/viewform",
-      "Jendouba": "https://docs.google.com/forms/d/e/1FAIpQLScgGlJwQAl7O7PinXf8pCupylVzWdP69f-bscQag7i0LlbVig/viewform",
-      "Kairouan": "https://docs.google.com/forms/d/e/1FAIpQLSd-j6GZFTt0bG_UPqGeHEPxMETFfyyXW3F9IQE17eDQFig8wA/viewform",
-      "Kasserine": "https://docs.google.com/forms/d/e/1FAIpQLSfc2HFx7o_jDx2aJ85tnWZcuVK-ylH2s24qT2LCBbrVkBpv5A/viewform",
-      "Kebili": "https://docs.google.com/forms/d/e/1FAIpQLSds9-iNpbhZDDYvG-9dvN9LLeQcd3mN2s0sR3_bGblY3tjm9A/viewform",
-      "Le Kef": "https://docs.google.com/forms/d/e/1FAIpQLSescTjA_TZUB2T8upCt3bLbiqN-T9gmZwH5-cpgPfUmjou5sw/viewform",
-      "Mahdia": "https://docs.google.com/forms/d/e/1FAIpQLSd2e2LnvCp5PRsjWCk18SqxffASW25O9Fp9W20DPnPgMSqwGw/viewform",
-      "Manouba": "https://docs.google.com/forms/d/e/1FAIpQLSfbMUil_LlnE1xaYW3BKKmRtRJpc6k55ufx5aMGS9TNP7oclg/viewform",
-      "Medenine": "https://docs.google.com/forms/d/e/1FAIpQLScZNmOkZQIcFzop9XJTcgjueJAg2XqiDWD2O8Hk3n7F3MCG_Q/viewform",
-      "Monastir": "https://docs.google.com/forms/d/e/1FAIpQLSewTK4rBmqaQoI69Ja9vPLrkual0rcyILTgpg5rGJq5D6SfJg/viewform",
-      "Nabeul": "https://docs.google.com/forms/d/e/1FAIpQLSekivAqyuE8Wb9Bf6IvDYfi7O-y159dpyXduTlmsDNI10AVtw/viewform",
-      "Sfax": "https://docs.google.com/forms/d/e/1FAIpQLScilM_Tjq3-smIDbyxNfEiZnbbuDUK4ww92s8ju4VNkoUeC9w/viewform",
-      "Sidi Bouzid": "https://docs.google.com/forms/d/e/1FAIpQLSfvWAc9xFU-YGRwEc9WPuBisUtKUnLwmM6MPw6mv1DzJYZecQ/viewform",
-      "Siliana": "https://docs.google.com/forms/d/e/1FAIpQLSdZ0eKwHOv-Mf07tugXwmt_vxPRvdx_ZJH8mWXJuF8bNiBDBQ/viewform",
-      "Sousse": "https://docs.google.com/forms/d/e/1FAIpQLSe33qs8SD6ZDFNsNovYB1byXzPzap4u3WNxqQQi4Ca7EpixGg/viewform",
-      "Tataouine": "https://docs.google.com/forms/d/e/1FAIpQLScau2aVzneLDLv4atr0ouUvVx1vzC_A8z6DcAl1Gu43UXO0aQ/viewform",
-      "Tozeur": "https://docs.google.com/forms/d/e/1FAIpQLScYUXdyEDgy5LQjufhK7kamNV6HrwGN_tqvbszi1bpAE0r45Q/viewform",
-      "Tunis": "https://docs.google.com/forms/d/e/1FAIpQLSdLp23YSS1HARjCq8DZL5AzNoxJ808lteqnuvfqA1IeoAghpw/viewform",
-      "Zaghouan": "https://docs.google.com/forms/d/e/1FAIpQLSdHSr9wNzqhvfuTI3FD3OXT6XGRJ0h13DBHCxtxJ31vTY-pfA/viewform"
+        "Ariana": "https://docs.google.com/forms/d/e/1FAIpQLSeIGzfgByZSGhInjFxcxslf5vyqScEaKQHm4VsXFtYv-miJCQ/viewform", "Beja": "https://docs.google.com/forms/d/e/1FAIpQLScDsTtGJyP-ZstwxkztGMKgZGmDPMKeyWGR1KMxrSdr0e7QcA/viewform", "Ben Arous": "https://docs.google.com/forms/d/e/1FAIpQLSeLsolZbo5wQ-93bH3ffVphPx2KEIkboswDQ87v9MosOb5txA/viewform", "Bizerte": "https://docs.google.com/forms/d/e/1FAIpQLSeoSe8ZFLXXh4nyCPX-qYalNkOAMpQnCYDMD2kskpEvwJ4JiA/viewform", "Gabes": "https://docs.google.com/forms/d/e/1FAIpQLSeonk4YES79GrsuzczWTxp7NxBPinCiOdR5VpEPvXWpTEw8XA/viewform", "Gafsa": "https://docs.google.com/forms/d/e/1FAIpQLSdypdTUT8Bb7nLg8WVeJ8w030mbZJ8NCU3ltH4hC3YM19q3RA/viewform", "Jendouba": "https://docs.google.com/forms/d/e/1FAIpQLScgGlJwQAl7O7PinXf8pCupylVzWdP69f-bscQag7i0LlbVig/viewform", "Kairouan": "https://docs.google.com/forms/d/e/1FAIpQLSd-j6GZFTt0bG_UPqGeHEPxMETFfyyXW3F9IQE17eDQFig8wA/viewform", "Kasserine": "https://docs.google.com/forms/d/e/1FAIpQLSfc2HFx7o_jDx2aJ85tnWZcuVK-ylH2s24qT2LCBbrVkBpv5A/viewform", "Kebili": "https://docs.google.com/forms/d/e/1FAIpQLSds9-iNpbhZDDYvG-9dvN9LLeQcd3mN2s0sR3_bGblY3tjm9A/viewform", "Le Kef": "https://docs.google.com/forms/d/e/1FAIpQLSescTjA_TZUB2T8upCt3bLbiqN-T9gmZwH5-cpgPfUmjou5sw/viewform", "Mahdia": "https://docs.google.com/forms/d/e/1FAIpQLSd2e2LnvCp5PRsjWCk18SqxffASW25O9Fp9W20DPnPgMSqwGw/viewform", "Manouba": "https://docs.google.com/forms/d/e/1FAIpQLSfbMUil_LlnE1xaYW3BKKmRtRJpc6k55ufx5aMGS9TNP7oclg/viewform", "Medenine": "https://docs.google.com/forms/d/e/1FAIpQLScZNmOkZQIcFzop9XJTcgjueJAg2XqiDWD2O8Hk3n7F3MCG_Q/viewform", "Monastir": "https://docs.google.com/forms/d/e/1FAIpQLSewTK4rBmqaQoI69Ja9vPLrkual0rcyILTgpg5rGJq5D6SfJg/viewform", "Nabeul": "https://docs.google.com/forms/d/e/1FAIpQLSekivAqyuE8Wb9Bf6IvDYfi7O-y159dpyXduTlmsDNI10AVtw/viewform", "Sfax": "https://docs.google.com/forms/d/e/1FAIpQLScilM_Tjq3-smIDbyxNfEiZnbbuDUK4ww92s8ju4VNkoUeC9w/viewform", "Sidi Bouzid": "https://docs.google.com/forms/d/e/1FAIpQLSfvWAc9xFU-YGRwEc9WPuBisUtKUnLwmM6MPw6mv1DzJYZecQ/viewform", "Siliana": "https://docs.google.com/forms/d/e/1FAIpQLSdZ0eKwHOv-Mf07tugXwmt_vxPRvdx_ZJH8mWXJuF8bNiBDBQ/viewform", "Sousse": "https://docs.google.com/forms/d/e/1FAIpQLSe33qs8SD6ZDFNsNovYB1byXzPzap4u3WNxqQQi4Ca7EpixGg/viewform", "Tataouine": "https://docs.google.com/forms/d/e/1FAIpQLScau2aVzneLDLv4atr0ouUvVx1vzC_A8z6DcAl1Gu43UXO0aQ/viewform", "Tozeur": "https://docs.google.com/forms/d/e/1FAIpQLScYUXdyEDgy5LQjufhK7kamNV6HrwGN_tqvbszi1bpAE0r45Q/viewform", "Tunis": "https://docs.google.com/forms/d/e/1FAIpQLSdLp23YSS1HARjCq8DZL5AzNoxJ808lteqnuvfqA1IeoAghpw/viewform", "Zaghouan": "https://docs.google.com/forms/d/e/1FAIpQLSdHSr9wNzqhvfuTI3FD3OXT6XGRJ0h13DBHCxtxJ31vTY-pfA/viewform"
     };
 
     const normalize = s => (s && String(s).toLowerCase().trim()) || "";
@@ -147,32 +144,36 @@
       normalizedForms[normalize(k)] = formsLinks[k];
     }
 
-    const map = L.map('map', {
-      center: [33.8869, 9.5375],
-      zoom: 7,
-      zoomControl: true,
-      attributionControl: false 
-    });
-
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: 'abcd',
-      maxZoom: 19
-    }).addTo(map);
+    const map = L.map('map', { center: [33.8869, 9.5375], zoom: 7, zoomControl: true, attributionControl: false });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap &copy; CARTO', subdomains: 'abcd', maxZoom: 19 }).addTo(map);
 
     const loader = document.getElementById('loader');
+    const infoPanel = document.getElementById('info-panel'); // مقبض للوحة المعلومات
     
-    const defaultStyle = {
-      color: "#005a8d",
-      weight: 1.5,
-      fillColor: "#5da9dd",
-      fillOpacity: 0.7
-    };
+    const defaultStyle = { color: "#005a8d", weight: 1.5, fillColor: "#5da9dd", fillOpacity: 0.7 };
+    const highlightStyle = { fillColor: '#ffc107', fillOpacity: 0.9 };
 
-    const highlightStyle = {
-      fillColor: '#ffc107',
-      fillOpacity: 0.9
-    };
+    // --- دالة جديدة: لتحديث لوحة المعلومات ---
+    function updateInfoPanel(properties) {
+        if (properties) {
+            const displayName = properties.gouv_ar || properties.gouv_fr;
+            const dataKey = properties.gouv_fr; // استخدام الاسم الفرنسي كمفتاح للبيانات
+            const data = governorateData[dataKey];
+            
+            if (data) {
+                infoPanel.innerHTML = `<h4>${displayName}</h4>
+                                     <p><strong>المنسق الجهوي:</strong> ${data.coordinator}</p>
+                                     <p><strong>عدد الأعضاء:</strong> ${data.members.toLocaleString('ar')}</p>`;
+            } else {
+                infoPanel.innerHTML = `<h4>${displayName}</h4>
+                                     <p>لا توجد معلومات إضافية متاحة لهذه الولاية.</p>`;
+            }
+        } else {
+            // إعادة اللوحة للحالة الافتراضية
+            infoPanel.innerHTML = `<h4>معلومات الولاية</h4>
+                                 <p class="default-text">مرّر الفأرة فوق أي ولاية لعرض التفاصيل هنا.</p>`;
+        }
+    }
 
     fetch("TN-gouvernorats.geojson")
       .then(resp => resp.json())
@@ -185,56 +186,46 @@
             const labelText = nameAr || nameFr || "غير معروف";
             const lookupKey = normalize(nameFr || nameAr);
 
-            layer.bindTooltip(labelText, {
-              permanent: true,
-              direction: 'center',
-              className: 'label'
-            });
-
-            const formUrl = normalizedForms[lookupKey] || null;
-            const popupHtml = formUrl
-              ? `<b>${labelText}</b><br><a href="${formUrl}" target="_blank" class="popup-link">📋 فتح الاستمارة</a>`
-              : `<b>${labelText}</b><br>لا يوجد رابط استمارة`;
-            layer.bindPopup(popupHtml);
+            layer.bindTooltip(labelText, { permanent: true, direction: 'center', className: 'label' });
             
+            const formUrl = normalizedForms[lookupKey] || null;
+            layer.bindPopup(formUrl ? `<b>${labelText}</b>...` : `<b>${labelText}</b>...`);
+
+            // --- تعديل: تحديث أحداث الفأرة ---
             layer.on({
-                mouseover: (e) => e.target.setStyle(highlightStyle),
-                mouseout: (e) => tunisiaLayer.resetStyle(e.target),
+                mouseover: (e) => {
+                    e.target.setStyle(highlightStyle);
+                    updateInfoPanel(e.target.feature.properties); // تحديث اللوحة
+                },
+                mouseout: (e) => {
+                    tunisiaLayer.resetStyle(e.target);
+                    updateInfoPanel(null); // إعادة تعيين اللوحة
+                },
                 click: (e) => {
                     map.fitBounds(e.target.getBounds());
                     if (formUrl) {
-                        setTimeout(() => {
-                           window.open(formUrl, '_blank');
-                        }, 300); // Small delay to allow zoom animation to start
-                    } else {
-                        e.target.openPopup();
+                        setTimeout(() => { window.open(formUrl, '_blank'); }, 300);
                     }
                 }
             });
           }
         }).addTo(map);
 
-        // --- تعديل: تحديد إطار الخريطة ومستوى التصغير ---
         const bounds = tunisiaLayer.getBounds();
         map.fitBounds(bounds);
-
-        // انتظر قليلاً حتى يتم ضبط الزوم الأولي، ثم احصل عليه
         setTimeout(() => {
             const minZoomLevel = map.getZoom();
-            map.setMinZoom(minZoomLevel); // منع التصغير لأبعد من هذا المستوى
+            map.setMinZoom(minZoomLevel);
         }, 500);
-        
-        // منع المستخدم من الابتعاد كثيراً عن تونس
         map.setMaxBounds(bounds.pad(0.1)); 
         
         loader.style.display = 'none';
       })
       .catch(err => {
-        console.error("خطأ في تحميل أو تحليل TN-gouvernorats.geojson:", err);
+        console.error("خطأ: ", err);
         loader.style.display = 'none';
-        alert("خطأ: لم يتم تحميل الخريطة بشكل صحيح. يرجى التحقق من وجود ملف TN-gouvernorats.geojson.");
+        alert("خطأ: لم يتم تحميل الخريطة بشكل صحيح.");
       });
-
   </script>
 </body>
 </html>
