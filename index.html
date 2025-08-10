@@ -17,8 +17,10 @@
     .side{ background:linear-gradient(180deg,#ffffff,#fbfffe); border-radius:12px; padding:14px; box-shadow:0 10px 26px rgba(3,56,48,0.04); height:720px; overflow:auto }
     .side h2{ margin:0 0 6px 0 }
     .meta{ color:var(--muted); font-size:14px }
-    .btn{ display:inline-block; padding:10px 12px; border-radius:10px; font-weight:700; border:0; cursor:pointer }
-    .btn-primary{ background:var(--accent); color:#fff }
+    .btn{ display:inline-block; padding:10px 12px; border-radius:10px; font-weight:700; border:0; cursor:pointer; width: 100%; text-align: center; }
+    .btn-primary{ background:var(--accent); color:#fff; transition: background-color 0.2s ease; }
+    .btn-primary:hover{ background: #005a4f; }
+    .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
     .governorate-label {
       background: transparent;
       border: none;
@@ -59,33 +61,16 @@
   <script>
     const GEOJSON_URL = 'TN-gouvernorats.geojson';
     
-    // ملاحظة هامة: استبدل الروابط الوهمية بروابط Google Forms الحقيقية
-    // المفاتيح هنا يجب أن تطابق الأسماء في حقل 'gouv_fr' من ملف البيانات
+    // ملاحظة هامة: يجب استبدال الروابط الوهمية بروابط Google Forms الحقيقية
     const FORM_LINKS = {
-      "Ben Arous": "https://forms.gle/benarous-form",
-      "Ariana": "https://forms.gle/ariana-form",
-      "Bizerte": "https://forms.gle/bizerte-form",
-      "Béja": "https://forms.gle/beja-form",
-      "Gabes": "https://forms.gle/gabes-form",
-      "Gafsa": "https://forms.gle/gafsa-form",
-      "Jendouba": "https://forms.gle/jendouba-form",
-      "Kairouan": "https://forms.gle/kairouan-form",
-      "Kasserine": "https://forms.gle/kasserine-form",
-      "Kebili": "https://forms.gle/kebili-form",
-      "Le Kef": "https://forms.gle/kef-form",
-      "Mahdia": "https://forms.gle/mahdia-form",
-      "Manouba": "https://forms.gle/manouba-form",
-      "Medenine": "https://forms.gle/medenine-form",
-      "Monastir": "https://forms.gle/monastir-form",
-      "Nabeul": "https://forms.gle/nabeul-form",
-      "Sfax": "https://forms.gle/sfax-form",
-      "Sidi Bouzid": "https://forms.gle/sidibouzid-form",
-      "Siliana": "https://forms.gle/siliana-form",
-      "Sousse": "https://forms.gle/sousse-form",
-      "Tataouine": "https://forms.gle/tataouine-form",
-      "Tozeur": "https://forms.gle/tozeur-form",
-      "Tunis": "https://forms.gle/tunis-form",
-      "Zaghouan": "https://forms.gle/zaghouan-form"
+      "Ben Arous": "https://forms.gle/benarous-form", "Ariana": "https://forms.gle/ariana-form", "Bizerte": "https://forms.gle/bizerte-form",
+      "Beja": "https://forms.gle/beja-form", "Gabes": "https://forms.gle/gabes-form", "Gafsa": "https://forms.gle/gafsa-form",
+      "Jendouba": "https://forms.gle/jendouba-form", "Kairouan": "https://forms.gle/kairouan-form", "Kasserine": "https://forms.gle/kasserine-form",
+      "Kebili": "https://forms.gle/kebili-form", "Le Kef": "https://forms.gle/kef-form", "Mahdia": "https://forms.gle/mahdia-form",
+      "Mannouba": "https://forms.gle/manouba-form", "Medenine": "https://forms.gle/medenine-form", "Monastir": "https://forms.gle/monastir-form",
+      "Nabeul": "https://forms.gle/nabeul-form", "Sfax": "https://forms.gle/sfax-form", "Sidi Bouzid": "https://forms.gle/sidibouzid-form",
+      "Siliana": "https://forms.gle/siliana-form", "Sousse": "https://forms.gle/sousse-form", "Tataouine": "https://forms.gle/tataouine-form",
+      "Tozeur": "https://forms.gle/tozeur-form", "Tunis": "https://forms.gle/tunis-form", "Zaghouan": "https://forms.gle/zaghouan-form"
     };
 
     const corner1 = L.latLng(37.4, 11.7);
@@ -93,11 +78,8 @@
     const bounds = L.latLngBounds(corner1, corner2);
 
     const map = L.map('map', { 
-      zoomControl:true, 
-      minZoom:7, 
-      maxZoom:12,
-      maxBounds: bounds,
-      maxBoundsViscosity: 0.9 
+      zoomControl:true, minZoom:7, maxZoom:12,
+      maxBounds: bounds, maxBoundsViscosity: 0.9 
     }).setView([34.0, 9.0], 7);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -120,15 +102,6 @@
       const arabicName = props.gouv_ar || 'غير معروف';
       gNameEl.textContent = arabicName;
       openFormBtn.disabled = false;
-      openFormBtn.onclick = () => { 
-        const frenchName = props.gouv_fr;
-        const link = FORM_LINKS[frenchName] || '#';
-        if (link !== '#') {
-            window.open(link, '_blank');
-        } else {
-            alert('لا يوجد رابط تسجيل لهذه المحافظة بعد.');
-        }
-      };
     }
 
     function resetHighlight(e){
@@ -137,29 +110,28 @@
       openFormBtn.disabled = true;
     }
 
+    function onFeatureClick(e) {
+        const props = e.target.feature.properties;
+        const frenchName = props.gouv_fr;
+        const link = FORM_LINKS[frenchName] || '#';
+        if (link !== '#') {
+            window.open(link, '_blank');
+        } else {
+            alert('لا يوجد رابط تسجيل لهذه المحافظة بعد.');
+        }
+    }
+
     function onEachFeature(feature, layer){
-      // هذا هو الإصلاح النهائي الذي يقرأ من الحقل الصحيح 'gouv_ar'
       const arabicName = feature.properties.gouv_ar || 'غير معروف';
       
       layer.bindTooltip(arabicName, {
-          permanent: true, 
-          direction: 'center', 
-          className: 'governorate-label'
+          permanent: true, direction: 'center', className: 'governorate-label'
       });
 
       layer.on({ 
           mouseover: highlightFeature, 
           mouseout: resetHighlight,
-          click: (e) => {
-              const props = e.target.feature.properties;
-              const frenchName = props.gouv_fr;
-              const link = FORM_LINKS[frenchName] || '#';
-              if (link !== '#') {
-                  window.open(link, '_blank');
-              } else {
-                  alert('لا يوجد رابط تسجيل لهذه المحافظة بعد.');
-              }
-          }
+          click: onFeatureClick
       });
     }
 
@@ -171,7 +143,7 @@
         const data = await resp.json();
         geojson = L.geoJSON(data, { style: styleFeature, onEachFeature: onEachFeature }).addTo(map);
         map.fitBounds(geojson.getBounds(), { padding:[20,20] });
-      }catch(e){ 
+      } catch(e) { 
         console.error('Error loading GeoJSON:', e); 
         alert('تعذر تحميل حدود المحافظات.'); 
       }
