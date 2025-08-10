@@ -1,64 +1,33 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="ar">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>خريطة تونس التفاعلية — TuniBless</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <meta charset="UTF-8">
+  <title>خريطة تونس - استمارات الولايات</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    :root{ --accent:#00796b; --muted:#55606a; --hover-color: #ffc107; }
-    body{ font-family: "Noto Kufi Arabic", "Segoe UI", Tahoma, Arial; margin:0; background:#f5fbf9; color:#073642 }
-    .wrap{ max-width:1200px; margin:20px auto; padding:18px; display:grid; grid-template-columns: 1fr 360px; gap:18px }
-    header{ grid-column:1/-1; }
-    .map-card{ background:#fff; border-radius:12px; padding:10px; box-shadow:0 10px 30px rgba(3,56,48,0.06); height:720px; overflow:hidden }
-    #map{ width:100%; height:100%; border-radius:8px; background-color: #eef6f2; }
-    .side{ background:#fff; border-radius:12px; padding:14px; box-shadow:0 10px 26px rgba(3,56,48,0.04); height:720px; overflow:auto }
-    .btn{ display:inline-block; padding:10px 12px; border-radius:10px; font-weight:700; border:0; cursor:pointer; width: 100%; text-align: center; }
-    .btn-primary{ background:var(--accent); color:#fff; transition: background-color 0.2s ease; }
-    .btn-primary:hover{ background: #005a4f; }
-    .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
-    .governorate-label {
-      background: transparent; border: none; box-shadow: none; color: #073642;
-      font-size: 11px; font-weight: bold; text-shadow: 1px 1px 3px #fff; pointer-events: none;
-    }
-    @media (max-width:980px){ .wrap{ grid-template-columns:1fr } .side{ height:auto } .map-card{ height:520px } }
+    #map { height: 100vh; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <h1>📍 الخريطة التفاعلية لتونس — المحافظات</h1>
-      <p style="color:var(--muted)">انقر على أي محافظة لفتح نموذج التسجيل الخاص بها.</p>
-    </header>
-    <div class="map-card"> <div id="map"></div> </div>
-    <aside class="side">
-      <h2 id="g-name">اختر محافظة</h2>
-      <p class="meta" id="side-sub">مرّر الفأرة فوق أي محافظة لعرض التفاصيل</p>
-      <div style="margin-top:12px">
-        <button class="btn btn-primary" id="openFormBtn" disabled>فتح نموذج التسجيل</button>
-      </div>
-    </aside>
-  </div>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    const GEOJSON_URL = 'TN-gouvernorats.geojson';
-    
-    // ملاحظة: استبدل الروابط الوهمية بروابطك الحقيقية
-    const FORM_LINKS = {
-      "Ariana": "https://docs.google.com/forms/d/e/1FAIpQLSeIGzfgByZSGhInjFxcxslf5vyqScEaKQHm4VsXFtYv-miJCQ/viewform",
-      "Beja": "https://docs.google.com/forms/d/e/1FAIpQLScDsTtGJyP-ZstwxkztGMKgZGmDPMKeyWGR1KMxrSdr0e7QcA/viewform",
+    const formsLinks = {
+      "ariana": "https://docs.google.com/forms/d/e/1FAIpQLSeIGzfgByZSGhInjFxcxslf5vyqScEaKQHm4VsXFtYv-miJCQ/viewform",
+      "beja": "https://docs.google.com/forms/d/e/1FAIpQLScDsTtGJyP-ZstwxkztGMKgZGmDPMKeyWGR1KMxrSdr0e7QcA/viewform",
       "Ben Arous": "https://docs.google.com/forms/d/e/1FAIpQLSeLsolZbo5wQ-93bH3ffVphPx2KEIkboswDQ87v9MosOb5txA/viewform",
-      "Bizerte": "https://docs.google.com/forms/d/e/1FAIpQLSeoSe8ZFLXXh4nyCPX-qYalNkOAMpQnCYDMD2kskpEvwJ4JiA/viewform",
+      "Bizert": "https://docs.google.com/forms/d/e/1FAIpQLSeoSe8ZFLXXh4nyCPX-qYalNkOAMpQnCYDMD2kskpEvwJ4JiA/viewform",
       "Gabes": "https://docs.google.com/forms/d/e/1FAIpQLSeonk4YES79GrsuzczWTxp7NxBPinCiOdR5VpEPvXWpTEw8XA/viewform",
       "Gafsa": "https://docs.google.com/forms/d/e/1FAIpQLSdypdTUT8Bb7nLg8WVeJ8w030mbZJ8NCU3ltH4hC3YM19q3RA/viewform",
-      "Jendouba": "https://docs.google.com/forms/d/e/1FAIpQLScgGlJwQAl7O7PinXf8pCupylVzWdP69f-bscQag7i0LlbVig/viewform",
+      "Jandouba": "https://docs.google.com/forms/d/e/1FAIpQLScgGlJwQAl7O7PinXf8pCupylVzWdP69f-bscQag7i0LlbVig/viewform",
       "Kairouan": "https://docs.google.com/forms/d/e/1FAIpQLSd-j6GZFTt0bG_UPqGeHEPxMETFfyyXW3F9IQE17eDQFig8wA/viewform",
-      "Kasserine": "https://docs.google.com/forms/d/e/1FAIpQLSfc2HFx7o_jDx2aJ85tnWZcuVK-ylH2s24qT2LCBbrVkBpv5A/viewform",
+      "kasserine": "https://docs.google.com/forms/d/e/1FAIpQLSfc2HFx7o_jDx2aJ85tnWZcuVK-ylH2s24qT2LCBbrVkBpv5A/viewform",
       "Kebili": "https://docs.google.com/forms/d/e/1FAIpQLSds9-iNpbhZDDYvG-9dvN9LLeQcd3mN2s0sR3_bGblY3tjm9A/viewform",
-      "Le Kef": "https://docs.google.com/forms/d/e/1FAIpQLSescTjA_TZUB2T8upCt3bLbiqN-T9gmZwH5-cpgPfUmjou5sw/viewform",
+      "El Kef": "https://docs.google.com/forms/d/e/1FAIpQLSescTjA_TZUB2T8upCt3bLbiqN-T9gmZwH5-cpgPfUmjou5sw/viewform",
       "Mahdia": "https://docs.google.com/forms/d/e/1FAIpQLSd2e2LnvCp5PRsjWCk18SqxffASW25O9Fp9W20DPnPgMSqwGw/viewform",
       "Manouba": "https://docs.google.com/forms/d/e/1FAIpQLSfbMUil_LlnE1xaYW3BKKmRtRJpc6k55ufx5aMGS9TNP7oclg/viewform",
-      "Medenine": "https://docs.google.com/forms/d/e/1FAIpQLScZNmOkZQIcFzop9XJTcgjueJAg2XqiDWD2O8Hk3n7F3MCG_Q/viewform",
+      "Mednine": "https://docs.google.com/forms/d/e/1FAIpQLScZNmOkZQIcFzop9XJTcgjueJAg2XqiDWD2O8Hk3n7F3MCG_Q/viewform",
       "Monastir": "https://docs.google.com/forms/d/e/1FAIpQLSewTK4rBmqaQoI69Ja9vPLrkual0rcyILTgpg5rGJq5D6SfJg/viewform",
       "Nabeul": "https://docs.google.com/forms/d/e/1FAIpQLSekivAqyuE8Wb9Bf6IvDYfi7O-y159dpyXduTlmsDNI10AVtw/viewform",
       "Sfax": "https://docs.google.com/forms/d/e/1FAIpQLScilM_Tjq3-smIDbyxNfEiZnbbuDUK4ww92s8ju4VNkoUeC9w/viewform",
@@ -68,56 +37,37 @@
       "Tataouine": "https://docs.google.com/forms/d/e/1FAIpQLScau2aVzneLDLv4atr0ouUvVx1vzC_A8z6DcAl1Gu43UXO0aQ/viewform",
       "Tozeur": "https://docs.google.com/forms/d/e/1FAIpQLScYUXdyEDgy5LQjufhK7kamNV6HrwGN_tqvbszi1bpAE0r45Q/viewform",
       "Tunis": "https://docs.google.com/forms/d/e/1FAIpQLSdLp23YSS1HARjCq8DZL5AzNoxJ808lteqnuvfqA1IeoAghpw/viewform",
-      "Zaghouan": "https://docs.google.com/forms/d/e/1FAIpQLSdHSr9wNzqhvfuTI3FD3OXT6XGRJ0h13DBHCxtxJ31vTY-pfA/viewform"
+      "Zagouan": "https://docs.google.com/forms/d/e/1FAIpQLSdHSr9wNzqhvfuTI3FD3OXT6XGRJ0h13DBHCxtxJ31vTY-pfA/viewform"
     };
-    const map = L.map('map').setView([34.0, 9.0], 7);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { minZoom: 7, maxZoom: 12, attribution: '© OpenStreetMap' }).addTo(map);
-    const gNameEl = document.getElementById('g-name');
-    const openFormBtn = document.getElementById('openFormBtn');
-    let geojsonLayer;
-    function styleFeature() { return { color: '#0b6b5e', weight: 1.2, fillColor: '#e6f9f4', fillOpacity: 0.8 }; }
-    function highlightFeature(e) {
-      const layer = e.target;
-      layer.setStyle({ weight: 2.5, color: '#014d43', fillColor: 'var(--hover-color)', fillOpacity: 0.9 });
-      layer.bringToFront();
-      gNameEl.textContent = layer.feature.properties.name_ar;
-      openFormBtn.disabled = false;
-      openFormBtn.onclick = () => {
-          const frenchName = layer.feature.properties.name_fr;
-          const link = FORM_LINKS[frenchName] || '#';
-          if (link !== '#') window.open(link, '_blank');
-          else alert('لا يوجد رابط تسجيل لهذه المحافظة بعد.');
-      };
-    }
-    function resetHighlight(e) {
-      geojsonLayer.resetStyle(e.target);
-      gNameEl.textContent = 'اختر محافظة';
-      openFormBtn.disabled = true;
-    }
-    function onEachFeature(feature, layer) {
-      const arabicName = feature.properties.name_ar;
-      layer.bindTooltip(arabicName, { permanent: true, direction: 'center', className: 'governorate-label' });
-      layer.on({
-        mouseover: highlightFeature,
-        mouseout: resetHighlight,
-        click: (e) => {
-          const frenchName = e.target.feature.properties.name_fr;
-          const link = FORM_LINKS[frenchName] || '#';
-          if (link !== '#') window.open(link, '_blank');
-          else alert('لا يوجد رابط تسجيل لهذه المحافظة بعد.');
-        }
-      });
-    }
-    fetch(GEOJSON_URL)
+
+    const map = L.map('map').setView([33.8869, 9.5375], 6);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    fetch("https://raw.githubusercontent.com/opirchi/tunibless-map/main/TN-gouvernorats.geojson")
       .then(response => response.json())
       .then(data => {
-        geojsonLayer = L.geoJSON(data, { onEachFeature: onEachFeature, style: styleFeature }).addTo(map);
-        map.fitBounds(geojsonLayer.getBounds());
+        L.geoJSON(data, {
+          style: {
+            color: "blue",
+            weight: 2,
+            fillColor: "lightblue",
+            fillOpacity: 0.4
+          },
+          onEachFeature: function (feature, layer) {
+            const name = feature.properties.nom;
+            if (formsLinks[name]) {
+              layer.bindPopup(`<b>${name}</b><br><a href="${formsLinks[name]}" target="_blank">📋 فتح الاستمارة</a>`);
+            } else {
+              layer.bindPopup(`<b>${name}</b><br>لا يوجد رابط استمارة`);
+            }
+          }
+        }).addTo(map);
       })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('حدث خطأ فادح أثناء تحميل الخريطة.');
-      });
+      .catch(error => console.error("خطأ في تحميل GeoJSON:", error));
   </script>
 </body>
 </html>
