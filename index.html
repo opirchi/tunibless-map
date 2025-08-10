@@ -48,58 +48,52 @@
     
     // ملاحظة: استبدل الروابط الوهمية بروابطك الحقيقية
     const FORM_LINKS = {
-      "Ben Arous": "#", "Ariana": "#", "Bizerte": "#", "Béja": "#", "Gabès": "#",
-      "Gafsa": "#", "Jendouba": "#", "Kairouan": "#", "Kasserine": "#",
-      "Kébili": "#", "Le Kef": "#", "Mahdia": "#", "La Manouba": "#",
-      "Médenine": "#", "Monastir": "#", "Nabeul": "#", "Sfax": "#",
-      "Sidi Bouzid": "#", "Siliana": "#", "Sousse": "#", "Tataouine": "#",
-      "Tozeur": "#", "Tunis": "#", "Zaghouan": "#"
+        "Ariana": "#", "Beja": "#", "Ben Arous": "#", "Bizerte": "#", "Gabes": "#",
+        "Gafsa": "#", "Jendouba": "#", "Kairouan": "#", "Kasserine": "#",
+        "Kebili": "#", "Le Kef": "#", "Mahdia": "#", "Manouba": "#",
+        "Medenine": "#", "Monastir": "#", "Nabeul": "#", "Sfax": "#",
+        "Sidi Bouzid": "#", "Siliana": "#", "Sousse": "#", "Tataouine": "#",
+        "Tozeur": "#", "Tunis": "#", "Zaghouan": "#"
     };
-
     const map = L.map('map').setView([34.0, 9.0], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { minZoom: 7, maxZoom: 12, attribution: '© OpenStreetMap' }).addTo(map);
-
     const gNameEl = document.getElementById('g-name');
     const openFormBtn = document.getElementById('openFormBtn');
     let geojsonLayer;
-
     function styleFeature() { return { color: '#0b6b5e', weight: 1.2, fillColor: '#e6f9f4', fillOpacity: 0.8 }; }
     
     function highlightFeature(e) {
       const layer = e.target;
       layer.setStyle({ weight: 2.5, color: '#014d43', fillColor: 'var(--hover-color)', fillOpacity: 0.9 });
       layer.bringToFront();
-      gNameEl.textContent = layer.feature.properties.gouv_ar;
+      gNameEl.textContent = layer.feature.properties.name_ar; // <-- الإصلاح هنا
       openFormBtn.disabled = false;
       openFormBtn.onclick = () => {
-          const frenchName = layer.feature.properties.gouv_fr;
+          const frenchName = layer.feature.properties.name_fr; // <-- الإصلاح هنا
           const link = FORM_LINKS[frenchName] || '#';
           if (link !== '#') window.open(link, '_blank');
           else alert('لا يوجد رابط تسجيل لهذه المحافظة بعد.');
       };
     }
-
     function resetHighlight(e) {
       geojsonLayer.resetStyle(e.target);
       gNameEl.textContent = 'اختر محافظة';
       openFormBtn.disabled = true;
     }
-
     function onEachFeature(feature, layer) {
-      const arabicName = feature.properties.gouv_ar || 'غير معروف';
+      const arabicName = feature.properties.name_ar || 'غير معروف'; // <-- الإصلاح هنا
       layer.bindTooltip(arabicName, { permanent: true, direction: 'center', className: 'governorate-label' });
       layer.on({
         mouseover: highlightFeature,
         mouseout: resetHighlight,
         click: (e) => {
-          const frenchName = e.target.feature.properties.gouv_fr;
+          const frenchName = e.target.feature.properties.name_fr; // <-- الإصلاح هنا
           const link = FORM_LINKS[frenchName] || '#';
           if (link !== '#') window.open(link, '_blank');
           else alert('لا يوجد رابط تسجيل لهذه المحافظة بعد.');
         }
       });
     }
-
     fetch(GEOJSON_URL)
       .then(response => response.json())
       .then(data => {
@@ -107,7 +101,7 @@
         map.fitBounds(geojsonLayer.getBounds());
       })
       .catch(error => {
-        console.error('Error loading GeoJSON:', error);
+        console.error('Error:', error);
         alert('حدث خطأ فادح أثناء تحميل الخريطة.');
       });
   </script>
