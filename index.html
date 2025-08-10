@@ -45,57 +45,69 @@
     
     // ملاحظة: استبدل الروابط الوهمية بروابطك الحقيقية
     const FORM_LINKS = {
-      "Ben Arous": "#", "Zaghouan": "#", "Mannouba": "#", "Sousse": "#", "Beja": "#", "Le kef": "#", "Kairouan": "#", "Jandouba": "#",
-      "Mahdia": "#", "Tataouine": "#", "Mednine": "#", "Gafsa": "#", "Gabes": "#",
-      "Kebili": "#", "Monastir": "#", "Nabeul": "#", "Sfax": "#",
-      "Sidi Bouzid": "#", "Siliana": "#", "Ariana": "#",
-      "Tozeur": "#", "Tunis": "#", "Kasserine": "#"
+      "Ariana": "https://docs.google.com/forms/d/e/1FAIpQLSeIGzfgByZSGhInjFxcxslf5vyqScEaKQHm4VsXFtYv-miJCQ/viewform",
+      "Beja": "https://docs.google.com/forms/d/e/1FAIpQLScDsTtGJyP-ZstwxkztGMKgZGmDPMKeyWGR1KMxrSdr0e7QcA/viewform",
+      "Ben Arous": "https://docs.google.com/forms/d/e/1FAIpQLSeLsolZbo5wQ-93bH3ffVphPx2KEIkboswDQ87v9MosOb5txA/viewform",
+      "Bizerte": "https://docs.google.com/forms/d/e/1FAIpQLSeoSe8ZFLXXh4nyCPX-qYalNkOAMpQnCYDMD2kskpEvwJ4JiA/viewform",
+      "Gabes": "https://docs.google.com/forms/d/e/1FAIpQLSeonk4YES79GrsuzczWTxp7NxBPinCiOdR5VpEPvXWpTEw8XA/viewform",
+      "Gafsa": "https://docs.google.com/forms/d/e/1FAIpQLSdypdTUT8Bb7nLg8WVeJ8w030mbZJ8NCU3ltH4hC3YM19q3RA/viewform",
+      "Jendouba": "https://docs.google.com/forms/d/e/1FAIpQLScgGlJwQAl7O7PinXf8pCupylVzWdP69f-bscQag7i0LlbVig/viewform",
+      "Kairouan": "https://docs.google.com/forms/d/e/1FAIpQLSd-j6GZFTt0bG_UPqGeHEPxMETFfyyXW3F9IQE17eDQFig8wA/viewform",
+      "Kasserine": "https://docs.google.com/forms/d/e/1FAIpQLSfc2HFx7o_jDx2aJ85tnWZcuVK-ylH2s24qT2LCBbrVkBpv5A/viewform",
+      "Kebili": "https://docs.google.com/forms/d/e/1FAIpQLSds9-iNpbhZDDYvG-9dvN9LLeQcd3mN2s0sR3_bGblY3tjm9A/viewform",
+      "Le Kef": "https://docs.google.com/forms/d/e/1FAIpQLSescTjA_TZUB2T8upCt3bLbiqN-T9gmZwH5-cpgPfUmjou5sw/viewform",
+      "Mahdia": "https://docs.google.com/forms/d/e/1FAIpQLSd2e2LnvCp5PRsjWCk18SqxffASW25O9Fp9W20DPnPgMSqwGw/viewform",
+      "Manouba": "https://docs.google.com/forms/d/e/1FAIpQLSfbMUil_LlnE1xaYW3BKKmRtRJpc6k55ufx5aMGS9TNP7oclg/viewform",
+      "Medenine": "https://docs.google.com/forms/d/e/1FAIpQLScZNmOkZQIcFzop9XJTcgjueJAg2XqiDWD2O8Hk3n7F3MCG_Q/viewform",
+      "Monastir": "https://docs.google.com/forms/d/e/1FAIpQLSewTK4rBmqaQoI69Ja9vPLrkual0rcyILTgpg5rGJq5D6SfJg/viewform",
+      "Nabeul": "https://docs.google.com/forms/d/e/1FAIpQLSekivAqyuE8Wb9Bf6IvDYfi7O-y159dpyXduTlmsDNI10AVtw/viewform",
+      "Sfax": "https://docs.google.com/forms/d/e/1FAIpQLScilM_Tjq3-smIDbyxNfEiZnbbuDUK4ww92s8ju4VNkoUeC9w/viewform",
+      "Sidi Bouzid": "https://docs.google.com/forms/d/e/1FAIpQLSfvWAc9xFU-YGRwEc9WPuBisUtKUnLwmM6MPw6mv1DzJYZecQ/viewform",
+      "Siliana": "https://docs.google.com/forms/d/e/1FAIpQLSdZ0eKwHOv-Mf07tugXwmt_vxPRvdx_ZJH8mWXJuF8bNiBDBQ/viewform",
+      "Sousse": "https://docs.google.com/forms/d/e/1FAIpQLSe33qs8SD6ZDFNsNovYB1byXzPzap4u3WNxqQQi4Ca7EpixGg/viewform",
+      "Tataouine": "https://docs.google.com/forms/d/e/1FAIpQLScau2aVzneLDLv4atr0ouUvVx1vzC_A8z6DcAl1Gu43UXO0aQ/viewform",
+      "Tozeur": "https://docs.google.com/forms/d/e/1FAIpQLScYUXdyEDgy5LQjufhK7kamNV6HrwGN_tqvbszi1bpAE0r45Q/viewform",
+      "Tunis": "https://docs.google.com/forms/d/e/1FAIpQLSdLp23YSS1HARjCq8DZL5AzNoxJ808lteqnuvfqA1IeoAghpw/viewform",
+      "Zaghouan": "https://docs.google.com/forms/d/e/1FAIpQLSdHSr9wNzqhvfuTI3FD3OXT6XGRJ0h13DBHCxtxJ31vTY-pfA/viewform"
     };
-
     const map = L.map('map').setView([34.0, 9.0], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { minZoom: 7, maxZoom: 12, attribution: '© OpenStreetMap' }).addTo(map);
     const gNameEl = document.getElementById('g-name');
     const openFormBtn = document.getElementById('openFormBtn');
     let geojsonLayer;
-
     function styleFeature() { return { color: '#0b6b5e', weight: 1.2, fillColor: '#e6f9f4', fillOpacity: 0.8 }; }
-    
     function highlightFeature(e) {
       const layer = e.target;
       layer.setStyle({ weight: 2.5, color: '#014d43', fillColor: 'var(--hover-color)', fillOpacity: 0.9 });
       layer.bringToFront();
-      gNameEl.textContent = layer.feature.properties.gouv_ar; // **<-- الإصلاح هنا**
+      gNameEl.textContent = layer.feature.properties.name_ar;
       openFormBtn.disabled = false;
       openFormBtn.onclick = () => {
-          const frenchName = layer.feature.properties.gouv_fr; // **<-- الإصلاح هنا**
+          const frenchName = layer.feature.properties.name_fr;
           const link = FORM_LINKS[frenchName] || '#';
           if (link !== '#') window.open(link, '_blank');
           else alert('لا يوجد رابط تسجيل لهذه المحافظة بعد.');
       };
     }
-
     function resetHighlight(e) {
       geojsonLayer.resetStyle(e.target);
       gNameEl.textContent = 'اختر محافظة';
       openFormBtn.disabled = true;
     }
-
     function onEachFeature(feature, layer) {
-      const arabicName = feature.properties.gouv_ar || 'غير معروف'; // **<-- الإصلاح هنا**
+      const arabicName = feature.properties.name_ar;
       layer.bindTooltip(arabicName, { permanent: true, direction: 'center', className: 'governorate-label' });
-      
       layer.on({
         mouseover: highlightFeature,
         mouseout: resetHighlight,
         click: (e) => {
-          const frenchName = e.target.feature.properties.gouv_fr; // **<-- الإصلاح هنا**
+          const frenchName = e.target.feature.properties.name_fr;
           const link = FORM_LINKS[frenchName] || '#';
           if (link !== '#') window.open(link, '_blank');
           else alert('لا يوجد رابط تسجيل لهذه المحافظة بعد.');
         }
       });
     }
-
     fetch(GEOJSON_URL)
       .then(response => response.json())
       .then(data => {
