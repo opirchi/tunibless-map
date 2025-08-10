@@ -4,104 +4,295 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>خريطة تونس التفاعلية — TuniBless</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin="" />
+
   <style>
-    :root{ --accent:#00796b; --muted:#55606a; --hover-color: #ffc107; }
-    body{ font-family: "Noto Kufi Arabic", "Segoe UI", Tahoma, Arial; margin:0; background:#f5fbf9; color:#073642 }
-    .wrap{ max-width:1200px; margin:20px auto; padding:18px; display:grid; grid-template-columns: 1fr 360px; gap:18px }
+    :root{
+      /* ألوان Tunibless الافتراضية — غيّرها إذا تريد */
+      --accent: #00796b;         /* أساسي */
+      --accent-dark: #005a4f;    /* داكن */
+      --muted: #55606a;
+      --hover-color: #ffc107;    /* لون إبراز الولاية على المرور */
+      --feature-fill: #e6f9f4;
+      --feature-border: #0b6b5e;
+      --label-bg: rgba(255,255,255,0.85);
+      --label-color: #073642;
+    }
+
+    html,body{ height:100%; margin:0; font-family: "Noto Kufi Arabic", "Segoe UI", Tahoma, Arial; background:#f5fbf9; color:#073642; }
+    .wrap{ max-width:1200px; margin:18px auto; padding:16px; display:grid; grid-template-columns: 1fr 340px; gap:18px; align-items:start }
     header{ grid-column:1/-1; }
+    h1{ margin:0 0 6px 0; font-size:20px }
+    p.lead{ margin:0; color:var(--muted); }
+
     .map-card{ background:#fff; border-radius:12px; padding:10px; box-shadow:0 10px 30px rgba(3,56,48,0.06); height:720px; overflow:hidden }
     #map{ width:100%; height:100%; border-radius:8px; background-color: #eef6f2; }
+
     .side{ background:#fff; border-radius:12px; padding:14px; box-shadow:0 10px 26px rgba(3,56,48,0.04); height:720px; overflow:auto }
-    .btn{ display:inline-block; padding:10px 12px; border-radius:10px; font-weight:700; border:0; cursor:pointer; width: 100%; text-align: center; }
-    .btn-primary{ background:var(--accent); color:#fff; transition: background-color 0.2s ease; }
-    .btn-primary:hover{ background: #005a4f; }
-    .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
-    .governorate-label {
-      background: transparent; border: none; box-shadow: none; color: #073642;
-      font-size: 11px; font-weight: bold; text-shadow: 1px 1px 3px #fff; pointer-events: none;
+    .meta { color:var(--muted); margin-top:6px; }
+
+    .btn{ display:inline-block; padding:10px 12px; border-radius:10px; font-weight:700; border:0; cursor:pointer; width:100%; text-align:center; }
+    .btn-primary{ background:var(--accent); color:#fff; transition: background-color 0.18s ease; }
+    .btn-primary:hover{ background:var(--accent-dark); }
+
+    /* ستايل لعلامات التسميات (الـ labels) */
+    .g-label {
+      white-space: nowrap;
+      padding:6px 8px;
+      border-radius:8px;
+      background: var(--label-bg);
+      color: var(--label-color);
+      font-weight:700;
+      font-size:12px;
+      box-shadow: 0 2px 6px rgba(3,56,48,0.12);
+      transform-origin: center;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      direction: ltr; /* أسماء فرنسية من اليسار لليمين داخل العنصر */
     }
-    @media (max-width:980px){ .wrap{ grid-template-columns:1fr } .side{ height:auto } .map-card{ height:520px } }
+    /* حالة المرور - نزيد الحجم */
+    .g-label.label-hover {
+      transform: scale(1.18);
+      box-shadow: 0 6px 18px rgba(3,56,48,0.18);
+      z-index: 9999;
+    }
+
+    /* responsive */
+    @media (max-width:980px){
+      .wrap{ grid-template-columns:1fr; padding:10px }
+      .side{ height:auto; order:2 }
+      .map-card{ height:520px; order:1 }
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
       <h1>📍 الخريطة التفاعلية لتونس — المحافظات</h1>
-      <p style="color:var(--muted)">انقر على أي محافظة لفتح نموذج التسجيل الخاص بها.</p>
+      <p class="lead">الأسماء بالفرنسية ظاهرة على الخريطة — مرّر فوق أي ولاية لتُبرَز.</p>
     </header>
 
-    <div class="map-card"> <div id="map"></div> </div>
+    <div class="map-card">
+      <div id="map"></div>
+    </div>
 
-    <aside class="side">
-      <h2 id="g-name">اختر محافظة</h2>
-      <p class="meta" id="side-sub">مرّر الفأرة فوق أي محافظة لعرض التفاصيل</p>
+    <aside class="side" aria-live="polite">
+      <h2 id="g-name">اختر ولاية</h2>
+      <p class="meta" id="side-sub">مرّر الماوس فوق أي ولاية لعرضها باللون المغاير وتكبير اسمها.</p>
       <div style="margin-top:12px">
         <button class="btn btn-primary" id="openFormBtn" disabled>فتح نموذج التسجيل</button>
       </div>
+      <hr />
+      <p style="color:var(--muted); font-size:13px">
+        ملاحظة: ضع روابط نماذج التسجيل في كائن <code>FORM_LINKS</code> داخل السكربت (المفاتيح: أسماء بالفرنسية كما في الخاصية <code>gouv_fr</code> داخل GeoJSON).
+      </p>
     </aside>
   </div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+          crossorigin=""></script>
+
   <script>
+    // مسار ملف الـ GeoJSON (يجب أن يكون في نفس المجلد)
     const GEOJSON_URL = 'TN-gouvernorats.geojson';
-    
-    // المفاتيح هنا يجب أن تطابق الأسماء في حقل 'gouv_fr'
+
+    /* روابط النماذج — ضع هنا الروابط الحقيقية
+       المفتاح يجب أن يطابق قيمة gouv_fr في خاصية الـ GeoJSON لكل محافطة */
     const FORM_LINKS = {
-      "Ben Arous": "#", "Zaghouan": "#", "Mannouba": "#", "Sousse": "#", "Beja": "#", "Le kef": "#", "Kairouan": "#", "Jandouba": "#",
-      "Mahdia": "#", "Tataouine": "#", "Mednine": "#", "Gafsa": "#", "Gabes": "#",
-      /* أكمل بقية الروابط هنا */
+      /* مثال:
+      "Ariana": "https://example.com/form-ariana",
+      "Ben Arous": "https://example.com/form-ben-arous",
+      */
     };
 
-    const map = L.map('map').setView([34.0, 9.0], 7);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { minZoom:7, maxZoom:12, attribution: '© OpenStreetMap' }).addTo(map);
+    // إعداد الخريطة
+    const map = L.map('map', {
+      zoomControl: true,
+      attributionControl: false
+    }).setView([34.0, 9.0], 7);
 
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      minZoom: 6,
+      maxZoom: 14,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    // عناصر واجهة
     const gNameEl = document.getElementById('g-name');
     const openFormBtn = document.getElementById('openFormBtn');
-    let geojsonLayer;
 
-    function styleFeature() { return { color: '#0b6b5e', weight: 1.2, fillColor: '#e6f9f4', fillOpacity: 0.8 }; }
-    
-    function highlightFeature(e) {
-      const layer = e.target;
-      layer.setStyle({ weight: 2.5, color: '#014d43', fillColor: 'var(--hover-color)', fillOpacity: 0.9 });
-      layer.bringToFront();
-      gNameEl.textContent = layer.feature.properties.gouv_ar; // <-- الإصلاح هنا
-      openFormBtn.disabled = false;
+    let geojsonLayer = null;
+    let boundsAll = null;
+
+    // ستايل افتراضي وستايل إبراز
+    function styleFeature(feature) {
+      return {
+        color: getComputedStyle(document.documentElement).getPropertyValue('--feature-border').trim() || '#0b6b5e',
+        weight: 1.2,
+        fillColor: getComputedStyle(document.documentElement).getPropertyValue('--feature-fill').trim() || '#e6f9f4',
+        fillOpacity: 0.9
+      };
     }
+    const highlightStyle = {
+      weight: 2.6,
+      color: '#014d43',
+      fillColor: getComputedStyle(document.documentElement).getPropertyValue('--hover-color').trim() || '#ffc107',
+      fillOpacity: 0.95
+    };
 
-    function resetHighlight(e) {
-      geojsonLayer.resetStyle(e.target);
-      gNameEl.textContent = 'اختر محافظة';
-      openFormBtn.disabled = true;
-    }
-
+    // دالة: تهيئة كل Feature
     function onEachFeature(feature, layer) {
-      const arabicName = feature.properties.gouv_ar || 'غير معروف'; // <-- الإصلاح هنا
-      layer.bindTooltip(arabicName, { permanent: true, direction: 'center', className: 'governorate-label' });
-      
+      const french = (feature.properties && (feature.properties.gouv_fr || feature.properties.nom_fr)) || 'Unknown';
+      const arabic = (feature.properties && (feature.properties.gouv_ar || feature.properties.nom_ar)) || '';
+      layer.feature = feature;
+
+      // نضيف تسمية دائمة باستعمال Marker مع DivIcon عند مركز الشكل
+      // نحسب مركز الشكل (centroid approximation using bounds center)
+      if (layer.getBounds) {
+        const b = layer.getBounds();
+        const center = b.getCenter();
+
+        // أنشئ DivIcon بعنصر له الكلاس g-label لعرض الاسم بالفرنسية
+        const div = L.divIcon({
+          className: '', // لا نستخدم className الافتراضي (Leaflet تضيف مساحة)
+          html: `<div class="g-label" data-g="${escapeHtml(french)}">${escapeHtml(french)}</div>`,
+          iconSize: [100, 30],
+          iconAnchor: [0, 0]
+        });
+        const marker = L.marker(center, { icon: div, interactive: false }).addTo(map);
+
+        // ربط الـ marker بالـ layer لسهولة التحكم عند events
+        layer._labelMarker = marker;
+      }
+
+      // أحداث التفاعل
       layer.on({
-        mouseover: highlightFeature,
-        mouseout: resetHighlight,
-        click: (e) => {
-          const frenchName = e.target.feature.properties.gouv_fr; // <-- الإصلاح هنا
-          const link = FORM_LINKS[frenchName] || '#';
-          if (link !== '#') window.open(link, '_blank');
-          else alert('لا يوجد رابط تسجيل لهذه المحافظة بعد.');
+        mouseover: function(e) {
+          // إبراز الشكل
+          e.target.setStyle(highlightStyle);
+          if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+            e.target.bringToFront();
+          }
+          // تحديث العنوان الجانبي و زر الفتح
+          gNameEl.textContent = french + (arabic ? ` — ${arabic}` : '');
+          openFormBtn.disabled = false;
+
+          // كبّر تسمية الولاية إن وُجدت
+          const marker = e.target._labelMarker;
+          if (marker && marker.getElement) {
+            const el = marker.getElement();
+            if (el) {
+              const lbl = el.querySelector('.g-label');
+              if (lbl) lbl.classList.add('label-hover');
+            }
+          }
+        },
+        mouseout: function(e) {
+          // إعادة الستايل الافتراضي
+          geojsonLayer.resetStyle(e.target);
+          gNameEl.textContent = 'اختر ولاية';
+          openFormBtn.disabled = true;
+
+          // تصغير التسمية
+          const marker = e.target._labelMarker;
+          if (marker && marker.getElement) {
+            const el = marker.getElement();
+            if (el) {
+              const lbl = el.querySelector('.g-label');
+              if (lbl) lbl.classList.remove('label-hover');
+            }
+          }
+        },
+        click: function(e) {
+          // عند النقر، نفتح رابط النموذج إن وُجد
+          const frenchName = e.target.feature.properties.gouv_fr || e.target.feature.properties.nom_fr || null;
+          const link = (frenchName && FORM_LINKS[frenchName]) ? FORM_LINKS[frenchName] : null;
+          if (link) {
+            window.open(link, '_blank');
+          } else {
+            alert('لا يوجد رابط تسجيل مُعرّف لهذه الولاية بعد. ضع الرابط في كائن FORM_LINKS داخل السكربت.');
+          }
         }
       });
     }
 
+    // تحميل GeoJSON
     fetch(GEOJSON_URL)
-      .then(response => response.json())
-      .then(data => {
-        geojsonLayer = L.geoJSON(data, { onEachFeature: onEachFeature, style: styleFeature }).addTo(map);
-        map.fitBounds(geojsonLayer.getBounds());
+      .then(res => {
+        if (!res.ok) throw new Error('HTTP error ' + res.status);
+        return res.json();
       })
-      .catch(error => {
-        console.error('Error loading GeoJSON:', error);
-        alert('حدث خطأ فادح أثناء تحميل الخريطة.');
+      .then(data => {
+        // نتأكد أن هناك Features
+        if (!data || !data.features || !data.features.length) throw new Error('ملف GeoJSON لا يحتوي على أي features.');
+
+        // نضيف الطبقة
+        geojsonLayer = L.geoJSON(data, {
+          style: styleFeature,
+          onEachFeature: onEachFeature
+        }).addTo(map);
+
+        // ضبط حدود الخريطة لتشمل تونس فقط، ومنع السحب خارج الحدود
+        boundsAll = geojsonLayer.getBounds();
+        if (boundsAll.isValid()) {
+          map.fitBounds(boundsAll, { padding: [20,20] });
+          // نحدّد حدود السحب قليلاً إلى حواف تونس
+          map.setMaxBounds(boundsAll.pad(0.6));
+        }
+
+        // في بعض الحالات قد تحتاج إلى تحديث مركز marker لو كانت الأيقونات ليست في المكان الصحيح
+        // (لو كانت البلديات مشتتة) -> نعيد وضع العلامات عند كل feature
+        geojsonLayer.eachLayer(layer => {
+          if (layer._labelMarker && layer.getBounds) {
+            const cen = layer.getBounds().getCenter();
+            layer._labelMarker.setLatLng(cen);
+          }
+        });
+      })
+      .catch(err => {
+        console.error('خطأ أثناء تحميل GeoJSON:', err);
+        alert('حدث خطأ أثناء تحميل خريطة المحافظات. تأكد أن ملف TN-gouvernorats.geojson موجود في نفس المجلد وصالح.');
       });
+
+    // مساعدة صغيرة: دالة هروب أحرف HTML للعرض الآمن داخل html string
+    function escapeHtml(unsafe) {
+      if (!unsafe) return '';
+      return String(unsafe)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // زر فتح النموذج (يفضل تحديث FORM_LINKS)
+    openFormBtn.addEventListener('click', () => {
+      // اختر الولاية الحالية من الـ عنوان الجانبي
+      const text = gNameEl.textContent || '';
+      // نحاول استخراج الاسم الفرنسي (أول كلمة قبل dash)
+      const fr = text.split('—')[0].trim();
+      const link = (fr && FORM_LINKS[fr]) ? FORM_LINKS[fr] : null;
+      if (link) window.open(link, '_blank');
+      else alert('لا يوجد رابط مُعرف لهذه الولاية في FORM_LINKS.');
+    });
+
+    // منع التكبير المتسرع عند النقر على touch devices
+    map.on('zoomend', () => {
+      // قد نحتاج لتحديث مواقع الـ labels إذا تغيرت الحدود كثيراً
+      if (!geojsonLayer) return;
+      geojsonLayer.eachLayer(layer => {
+        if (layer._labelMarker && layer.getBounds) {
+          const cen = layer.getBounds().getCenter();
+          layer._labelMarker.setLatLng(cen);
+        }
+      });
+    });
   </script>
 </body>
 </html>
