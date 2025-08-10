@@ -61,7 +61,6 @@
   <script>
     const GEOJSON_URL = 'TN-gouvernorats.geojson';
     
-    // ملاحظة هامة: يجب استبدال الروابط الوهمية بروابط Google Forms الحقيقية
     const FORM_LINKS = {
       "Ben Arous": "https://forms.gle/benarous-form", "Ariana": "https://forms.gle/ariana-form", "Bizerte": "https://forms.gle/bizerte-form",
       "Beja": "https://forms.gle/beja-form", "Gabes": "https://forms.gle/gabes-form", "Gafsa": "https://forms.gle/gafsa-form",
@@ -89,60 +88,87 @@
     const gNameEl = document.getElementById('g-name');
     const openFormBtn = document.getElementById('openFormBtn');
     
+    function getGovernorateName(props) {
+        return props.gouv_ar || props.NAME_1 || props.name || 'غير معروف';
+    }
+    
+    function getGovernorateLinkKey(props) {
+        return props.gouv_fr || props.NAME_1 || props.name;
+    }
+
     function styleFeature(feature){
       return { color: '#0b6b5e', weight: 1.2, fillColor: '#e6f9f4', fillOpacity: 0.8 };
     }
 
-    function highlightFeature(e){
-      const layer = e.target;
-      layer.setStyle({ weight: 2.5, color: '#014d43', fillColor: 'var(--hover-color)', fillOpacity: 0.9 });
-      if(!L.Browser.ie && !L.Browser.opera && !L.Browser.edge){ layer.bringToFront(); }
-      
-      const props = layer.feature.properties;
-      const arabicName = props.gouv_ar || 'غير معروف';
-      gNameEl.textContent = arabicName;
-      openFormBtn.disabled = false;
-    }
+    let governorateGroups = {};
 
-    function resetHighlight(e){
-      geojson.resetStyle(e.target);
-      gNameEl.textContent = 'اختر محافظة';
-      openFormBtn.disabled = true;
-    }
-
-    function onFeatureClick(e) {
-        const props = e.target.feature.properties;
-        const frenchName = props.gouv_fr;
-        const link = FORM_LINKS[frenchName] || '#';
-        if (link !== '#') {
-            window.open(link, '_blank');
-        } else {
-            alert('لا يوجد رابط تسجيل لهذه المحافظة بعد.');
-        }
-    }
-
-    function onEachFeature(feature, layer){
-      const arabicName = feature.properties.gouv_ar || 'غير معروف';
-      
-      layer.bindTooltip(arabicName, {
-          permanent: true, direction: 'center', className: 'governorate-label'
-      });
-
-      layer.on({ 
-          mouseover: highlightFeature, 
-          mouseout: resetHighlight,
-          click: onFeatureClick
-      });
-    }
-
-    let geojson = null;
     async function loadGeoJSON(){
       try{
         const resp = await fetch(GEOJSON_URL);
         if(!resp.ok) throw new Error('فشل تحميل GeoJSON');
         const data = await resp.json();
-        geojson = L.geoJSON(data, { style: styleFeature, onEachFeature: onEachFeature }).addTo(map);
-        map.fitBounds(geojson.getBounds(), { padding:[20,20] });
+
+        // **المنطق الجديد: تجميع الولايات**
+        data.features.forEach(feature => {
+            const arabicName = getGovernorateName(feature.properties);
+            if (arabicName === 'غير معروف') return;
+
+            if (!governorateGroups[arabicName]) {
+                governorateGroups[arabicName] = {
+                    layers: [],
+                    properties: feature.properties
+                };
+            }
+            governorateGroups[arabicName].layers.push(L.geoJSON(feature));
+        });
+
+        // **المنطق الجديد: عرض المجموعات على الخريطة**
+        for (const name in governorateGroups) {
+            const groupData = governorateGroups[name];
+            const featureGroup = L.featureGroup(groupData.layers)
+                .setStyle(styleFeature())
+                .addTo(map);
+
+            featureGroup.bindTooltip(name, {
+                permanent: true, 
+                direction: 'center', 
+                className: 'governorate-label'
+            });
+
+            featureGroup.on({
+                mouseover: (e) => {
+                    featureGroup.setStyle({ weight: 2.5, color: '#014d43', fillColor: 'var(--hover-color)', fillOpacity: 0.9 });
+                    featureGroup.bringToFront();
+                    gNameEl.textContent = name;
+                    openFormBtn.disabled = false;
+                },
+                mouseout: (e) => {
+                    featureGroup.setStyle(styleFeature());
+                    gNameEl.textContent = 'اختر محافظة';
+                    openFormBtn.disabled = true;
+                },
+                click: (e) => {
+                    const linkKey = getGovernorateLinkKey(groupData.properties);
+                    const link = FORM_LINKS[linkKey] || '#';
+                    if (link !== '#') {
+                        window.open(link, '_blank');
+                    } else {
+                        alert('لا يوجد رابط تسجيل لهذه المحافظة بعد.');
+                    }
+                }
+            });
+            
+            // Assign the click handler to the button when hovering
+            featureGroup.on('mouseover', () => {
+                const linkKey = getGovernorateLinkKey(groupData.properties);
+                openFormBtn.onclick = () => {
+                     const link = FORM_LINKS[linkKey] || '#';
+                     if (link !== '#') window.open(link, '_blank');
+                };
+            });
+        }
+        map.fitBounds(L.featureGroup(Object.values(governorateGroups).map(g => g.layers[0])).getBounds(), { padding:[20,20] });
+
       } catch(e) { 
         console.error('Error loading GeoJSON:', e); 
         alert('تعذر تحميل حدود المحافظات.'); 
