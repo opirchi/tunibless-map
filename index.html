@@ -6,7 +6,7 @@
   <title>خريطة تونس التفاعلية — TuniBless</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <style>
-    :root{ --accent:#00796b; --muted:#55606a; --hover-color: #ffc107; } /* أضفنا لون التحويم هنا */
+    :root{ --accent:#00796b; --muted:#55606a; --hover-color: #ffc107; }
     body{ font-family: "Noto Kufi Arabic", "Segoe UI", Tahoma, Arial; margin:0; background:#f5fbf9; color:#073642 }
     .wrap{ max-width:1200px; margin:20px auto; padding:18px; display:grid; grid-template-columns: 1fr 360px; gap:18px }
     header{ grid-column:1/-1; display:flex; justify-content:space-between; align-items:center; gap:8px }
@@ -20,11 +20,7 @@
     .info-row{ display:flex; justify-content:space-between; align-items:center; padding:10px; background:#f7faf8; border-radius:8px; margin-top:12px }
     .btn{ display:inline-block; padding:10px 12px; border-radius:10px; font-weight:700; border:0; cursor:pointer }
     .btn-primary{ background:var(--accent); color:#fff }
-    .btn-ghost{ background:transparent; color:var(--accent); border:1px solid #e6f3ef }
     .small{ font-size:13px; color:var(--muted) }
-    .legend{ margin-top:14px; font-size:13px; color:var(--muted) }
-    
-    /* تنسيق أسماء الولايات الدائمة */
     .governorate-label {
       background: transparent;
       border: none;
@@ -33,9 +29,8 @@
       font-size: 10px;
       font-weight: bold;
       text-shadow: 1px 1px 2px #fff, -1px -1px 2px #fff, 1px -1px 2px #fff, -1px 1px 2px #fff;
-      pointer-events: none; /* لمنع تداخلها مع الفأرة */
+      pointer-events: none;
     }
-
     @media (max-width:980px){ .wrap{ grid-template-columns:1fr } .side{ height:auto } .map-card{ height:520px } }
   </style>
 </head>
@@ -53,24 +48,10 @@
     </div>
 
     <aside class="side" aria-live="polite">
-      <h2 id="side-title">تفاصيل المحافظة</h2>
-      <div class="meta" id="side-sub">اضغط على المحافظة لعرض المعلومات.</div>
-      <div class="info-row" style="margin-top:12px">
-        <div>
-          <div style="font-weight:800" id="g-name">اختر محافظة</div>
-          <div class="small">المنسق: <span id="g-coord">غير محدد</span></div>
-        </div>
-        <div style="text-align:left">
-          <div class="small">المسجلون</div>
-          <div style="font-weight:800; color:#073642" id="g-count">0</div>
-        </div>
-      </div>
-      <div style="display:flex; gap:8px; margin-top:12px">
-        <button class="btn btn-primary" id="openFormBtn">فتح نموذج التسجيل</button>
-      </div>
-      <div class="legend">
-        <strong>ملاحظة الخصوصية:</strong>
-        <div class="small" style="margin-top:6px">🔒 بيانات المتقدمين تُخزن فقط لاستخدامات التسجيل والتواصل.</div>
+      <h2 id="g-name">اختر محافظة</h2>
+      <div class="meta" id="side-sub">مرّر الفأرة فوق أي محافظة لعرض التفاصيل</div>
+      <div style="margin-top:12px">
+        <button class="btn btn-primary" id="openFormBtn" disabled>فتح نموذج التسجيل</button>
       </div>
     </aside>
   </div>
@@ -78,104 +59,126 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
   <script>
-  /***** الإعدادات *****/
-  const GEOJSON_URL = 'TN-gouvernorats.geojson';
-  const FORM_LINKS = { /* الصق روابطك هنا */ };
-  
-  /***** الكود *****/
-  // تعديل 1: تحديد حدود الخريطة لتونس فقط
-  const corner1 = L.latLng(37.4, 11.7); // North-East corner
-  const corner2 = L.latLng(30.2, 7.5);  // South-West corner
-  const bounds = L.latLngBounds(corner1, corner2);
-
-  const map = L.map('map', { 
-    zoomControl:true, 
-    minZoom:7, 
-    maxZoom:12,
-    maxBounds: bounds, // تطبيق الحدود
-    maxBoundsViscosity: 0.9 // يجعل الخروج من الحدود صعباً
-  }).setView([34.0, 9.0], 7);
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap'
-  }).addTo(map);
-
-  function styleFeature(feature){
-    return {
-      color: '#0b6b5e',
-      weight: 1.2,
-      fillColor: '#e6f9f4',
-      fillOpacity: 0.8
-    };
-  }
-
-  const gNameEl = document.getElementById('g-name');
-  const gCoordEl = document.getElementById('g-coord');
-  const gCountEl = document.getElementById('g-count');
-  const openFormBtn = document.getElementById('openFormBtn');
-  
-  function highlightFeature(e){
-    const layer = e.target;
-    // تعديل 2: تغيير لون التحويم إلى لون مخالف
-    layer.setStyle({ weight: 2.5, color: '#014d43', fillColor: 'var(--hover-color)', fillOpacity: 0.9 });
-    if(!L.Browser.ie && !L.Browser.opera && !L.Browser.edge){ layer.bringToFront(); }
-  }
-
-  function resetHighlight(e){
-    geojson.resetStyle(e.target);
-  }
-
-  function selectGovernorate(e) {
-      const layer = e.target;
-      const props = layer.feature.properties;
-      const name = props.NAME_1 || 'غير معروف';
-      
-      gNameEl.textContent = name;
-      gCoordEl.textContent = 'لم يُحدد بعد';
-      gCountEl.textContent = 'N/A'; // يمكن ربطه بـ Google Sheet لاحقاً
-      
-      openFormBtn.onclick = () => { 
-          const link = FORM_LINKS[name] || '#';
-          if (link !== '#') {
-              window.open(link, '_blank');
-          } else {
-              alert('لا يوجد رابط تسجيل لهذه المحافظة بعد.');
-          }
-      };
-  }
-
-  function onEachFeature(feature, layer){
-    const name = feature.properties.NAME_1 || 'غير معروف';
+    const GEOJSON_URL = 'TN-gouvernorats.geojson';
     
-    // تعديل 3: إضافة أسماء الولايات بشكل دائم
-    layer.bindTooltip(name, {
-        permanent: true, 
-        direction: 'center', 
-        className: 'governorate-label'
-    });
+    // ملاحظة هامة: يجب استبدال الروابط الوهمية بالروابط الحقيقية لنماذج Google Forms
+    const FORM_LINKS = {
+      "Ariana": "https://forms.gle/ariana-form",
+      "Beja": "https://forms.gle/beja-form",
+      "Ben Arous": "https://forms.gle/benarous-form",
+      "Bizerte": "https://forms.gle/bizerte-form",
+      "Gabes": "https://forms.gle/gabes-form",
+      "Gafsa": "https://forms.gle/gafsa-form",
+      "Jendouba": "https://forms.gle/jendouba-form",
+      "Kairouan": "https://forms.gle/kairouan-form",
+      "Kasserine": "https://forms.gle/kasserine-form",
+      "Kebili": "https://forms.gle/kebili-form",
+      "Kef": "https://forms.gle/kef-form",
+      "Mahdia": "https://forms.gle/mahdia-form",
+      "Manouba": "https://forms.gle/manouba-form",
+      "Medenine": "https://forms.gle/medenine-form",
+      "Monastir": "https://forms.gle/monastir-form",
+      "Nabeul": "https://forms.gle/nabeul-form",
+      "Sfax": "https://forms.gle/sfax-form",
+      "Sidi Bouzid": "https://forms.gle/sidibouzid-form",
+      "Siliana": "https://forms.gle/siliana-form",
+      "Sousse": "https://forms.gle/sousse-form",
+      "Tataouine": "https://forms.gle/tataouine-form",
+      "Tozeur": "https://forms.gle/tozeur-form",
+      "Tunis": "https://forms.gle/tunis-form",
+      "Zaghouan": "https://forms.gle/zaghouan-form"
+    };
 
-    layer.on({ 
-        mouseover: highlightFeature, 
-        mouseout: resetHighlight, 
-        click: selectGovernorate 
-    });
-  }
+    const corner1 = L.latLng(37.4, 11.7);
+    const corner2 = L.latLng(30.2, 7.5);
+    const bounds = L.latLngBounds(corner1, corner2);
 
-  let geojson = null;
-  async function loadGeoJSON(){
-    try{
-      const resp = await fetch(GEOJSON_URL);
-      if(!resp.ok) throw new Error('فشل تحميل GeoJSON');
-      const data = await resp.json();
-      geojson = L.geoJSON(data, { style: styleFeature, onEachFeature: onEachFeature }).addTo(map);
-      map.fitBounds(geojson.getBounds(), { padding:[20,20] });
-    }catch(e){ 
-      console.error('Error loading GeoJSON:', e); 
-      alert('تعذر تحميل حدود المحافظات.'); 
+    const map = L.map('map', { 
+      zoomControl:true, 
+      minZoom:7, 
+      maxZoom:12,
+      maxBounds: bounds,
+      maxBoundsViscosity: 0.9 
+    }).setView([34.0, 9.0], 7);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    const gNameEl = document.getElementById('g-name');
+    const openFormBtn = document.getElementById('openFormBtn');
+    
+    function styleFeature(feature){
+      return { color: '#0b6b5e', weight: 1.2, fillColor: '#e6f9f4', fillOpacity: 0.8 };
     }
-  }
 
-  loadGeoJSON();
+    function highlightFeature(e){
+      const layer = e.target;
+      layer.setStyle({ weight: 2.5, color: '#014d43', fillColor: 'var(--hover-color)', fillOpacity: 0.9 });
+      if(!L.Browser.ie && !L.Browser.opera && !L.Browser.edge){ layer.bringToFront(); }
+      
+      // تحديث الشريط الجانبي عند التحويم
+      const props = layer.feature.properties;
+      const name = props.NAME_1 || props.name || props.governorate || 'غير معروف';
+      gNameEl.textContent = name;
+      openFormBtn.disabled = false;
+      openFormBtn.onclick = () => { 
+        const link = FORM_LINKS[name] || '#';
+        if (link !== '#') {
+            window.open(link, '_blank');
+        } else {
+            alert('لا يوجد رابط تسجيل لهذه المحافظة بعد.');
+        }
+      };
+    }
+
+    function resetHighlight(e){
+      geojson.resetStyle(e.target);
+      gNameEl.textContent = 'اختر محافظة';
+      openFormBtn.disabled = true;
+    }
+
+    function onEachFeature(feature, layer){
+      // هذا هو السطر الذي تم إصلاحه ليتأكد من إيجاد الاسم
+      const name = feature.properties.NAME_1 || feature.properties.name || feature.properties.governorate || 'غير معروف';
+      
+      layer.bindTooltip(name, {
+          permanent: true, 
+          direction: 'center', 
+          className: 'governorate-label'
+      });
+
+      layer.on({ 
+          mouseover: highlightFeature, 
+          mouseout: resetHighlight,
+          click: (e) => {
+              const props = e.target.feature.properties;
+              const name = props.NAME_1 || props.name || props.governorate || 'غير معروف';
+              const link = FORM_LINKS[name] || '#';
+              if (link !== '#') {
+                  window.open(link, '_blank');
+              } else {
+                  alert('لا يوجد رابط تسجيل لهذه المحافظة بعد.');
+              }
+          }
+      });
+    }
+
+    let geojson = null;
+    async function loadGeoJSON(){
+      try{
+        const resp = await fetch(GEOJSON_URL);
+        if(!resp.ok) throw new Error('فشل تحميل GeoJSON');
+        const data = await resp.json();
+        geojson = L.geoJSON(data, { style: styleFeature, onEachFeature: onEachFeature }).addTo(map);
+        map.fitBounds(geojson.getBounds(), { padding:[20,20] });
+      }catch(e){ 
+        console.error('Error loading GeoJSON:', e); 
+        alert('تعذر تحميل حدود المحافظات.'); 
+      }
+    }
+
+    loadGeoJSON();
   </script>
 </body>
 </html>
