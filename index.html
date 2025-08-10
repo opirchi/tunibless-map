@@ -1,18 +1,21 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>خريطة تونس - الولايات</title>
+  <meta charset="utf-8" />
+  <title>خريطة تونس - الولايات (Forms)</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
+    html,body,#map { height: 100%; margin: 0; padding: 0; background: white; }
     #map { height: 100vh; }
     .label {
-      background: white;
+      background: rgba(255,255,255,0.95);
       border: 1px solid #888;
-      padding: 2px 4px;
+      padding: 2px 6px;
       border-radius: 4px;
       font-size: 12px;
       font-weight: bold;
+      white-space: nowrap;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
     }
   </style>
 </head>
@@ -21,6 +24,7 @@
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
+    // ---------- خام الروابط (عدل هنا إن احتجت) ----------
     const formsLinks = {
       "Ariana": "https://docs.google.com/forms/d/e/1FAIpQLSeIGzfgByZSGhInjFxcxslf5vyqScEaKQHm4VsXFtYv-miJCQ/viewform",
       "Beja": "https://docs.google.com/forms/d/e/1FAIpQLScDsTtGJyP-ZstwxkztGMKgZGmDPMKeyWGR1KMxrSdr0e7QcA/viewform",
@@ -48,62 +52,98 @@
       "Zaghouan": "https://docs.google.com/forms/d/e/1FAIpQLSdHSr9wNzqhvfuTI3FD3OXT6XGRJ0h13DBHCxtxJ31vTY-pfA/viewform"
     };
 
-    const map = L.map('map').setView([33.8869, 9.5375], 6);
+    // normalize helper: lowercase + trim
+    const normalize = s => (s && String(s).toLowerCase().trim()) || "";
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+    // create normalized lookup to avoid exact-match problems
+    const normalizedForms = {};
+    for (const k in formsLinks) {
+      normalizedForms[normalize(k)] = formsLinks[k];
+    }
 
+    // init map without tile layer (white background)
+    const map = L.map('map', {
+      center: [33.8869, 9.5375],
+      zoom: 6,
+      zoomControl: true,
+      attributionControl: false
+    });
+
+    // load local GeoJSON (file must be next to this HTML)
     fetch("TN-gouvernorats.geojson")
-      .then(response => response.json())
-      .then(data => {
-        const tunisiaLayer = L.geoJSON(data, {
+      .then(resp => resp.json())
+      .then(geojson => {
+        const tunisiaLayer = L.geoJSON(geojson, {
           style: {
-            color: "blue",
-            weight: 2,
-            fillColor: "lightblue",
-            fillOpacity: 0.4
+            color: "#1f78b4",
+            weight: 1.5,
+            fillColor: "#a6cee3",
+            fillOpacity: 0.6
           },
-          onEachFeature: function (feature, layer) {
-            const name = feature.properties.nom;
-            const center = layer.getBounds().getCenter();
+          onEachFeature: function(feature, layer) {
+            // try multiple property names (fallbacks)
+            const nameFr = feature.properties?.name_fr || feature.properties?.name || feature.properties?.nom || "";
+            const nameAr = feature.properties?.name_ar || feature.properties?.name || "";
 
-            // Label
-            L.marker(center, {
-              icon: L.divIcon({
-                className: 'label',
-                html: name,
-                iconSize: [50, 20]
-              })
-            }).addTo(map);
+            const labelText = nameAr || nameFr || "غير معروف";
+            const lookupKey = normalize(nameFr || nameAr);
 
-            // Popup
-            if (formsLinks[name]) {
-              layer.bindPopup(`<b>${name}</b><br><a href="${formsLinks[name]}" target="_blank">📋 فتح الاستمارة</a>`);
-            } else {
-              layer.bindPopup(`<b>${name}</b><br>لا يوجد رابط استمارة`);
-            }
+            // attach a permanent label (tooltip) at the layer center
+            layer.bindTooltip(labelText, {
+              permanent: true,
+              direction: 'center',
+              className: 'label'
+            });
 
-            // Highlight on hover
+            // prepare popup content (fallback)
+            const formUrl = normalizedForms[lookupKey] || null;
+            const popupHtml = formUrl
+              ? `<b>${labelText}</b><br><a href="${formUrl}" target="_blank">📋 فتح الاستمارة</a>`
+              : `<b>${labelText}</b><br>لا يوجد رابط استمارة`;
+            layer.bindPopup(popupHtml);
+
+            // highlight on hover
             layer.on('mouseover', function () {
-              layer.setStyle({ fillColor: 'yellow', fillOpacity: 0.7 });
+              layer.setStyle({ fillColor: 'yellow', fillOpacity: 0.85 });
             });
             layer.on('mouseout', function () {
-              layer.setStyle({ fillColor: 'lightblue', fillOpacity: 0.4 });
+              layer.setStyle({ fillColor: '#a6cee3', fillOpacity: 0.6 });
             });
 
-            // Zoom on click
-            layer.on('click', function () {
+            // click: zoom to feature and open form (if exists)
+            layer.on('click', function (e) {
               map.fitBounds(layer.getBounds());
+              if (formUrl) {
+                // فتح رابط في تاب جديد (ناتج عن حدث click - يجب أن يكون مسموح)
+                window.open(formUrl, '_blank');
+              } else {
+                // إن لم يوجد رابط، افتح البوب أب للمعلومة
+                layer.openPopup();
+                console.warn("No form URL for:", nameFr || nameAr, "(lookupKey:", lookupKey, ")");
+              }
             });
           }
         }).addTo(map);
 
-        // تحديد حدود تونس فقط
-        map.fitBounds(tunisiaLayer.getBounds());
+        // fit map to Tunisia and منع السحب خارج حدود تونس
+        const bounds = tunisiaLayer.getBounds();
+        map.fitBounds(bounds);
+        map.setMaxBounds(bounds.pad(0.18)); // يمنع التحرك بعيداً جداً عن تونس
+
+        // مفيد للتشخيص: اعرض أسماء ومطابقتها في الكونسول
+        // (سيطبع أسماء الولايات واذا وُجد رابط أم لا)
+        tunisiaLayer.eachLayer(layer => {
+          const p = layer.feature?.properties || {};
+          const nFr = p.name_fr || p.name || p.nom || "";
+          const key = normalize(nFr || p.name_ar || "");
+          console.log("Governorat:", nFr || p.name_ar || "غير معروف", " → form:", !!normalizedForms[key]);
+        });
+
       })
-      .catch(error => console.error("خطأ في تحميل GeoJSON:", error));
+      .catch(err => {
+        console.error("خطأ في تحميل أو تحليل TN-gouvernorats.geojson:", err);
+        alert("خطأ: لم أستطع تحميل ملف TN-gouvernorats.geojson. تأكّد أنه موجود بنفس المجلد وقم بتشغيل الخادم المحلي.");
+      });
   </script>
 </body>
 </html>
