@@ -59,7 +59,8 @@
   <script>
     const GEOJSON_URL = 'TN-gouvernorats.geojson';
     
-    // ملاحظة: مفاتيح هذا الكائن يجب أن تطابق الأسماء في حقل 'gouv_fr'
+    // ملاحظة هامة: استبدل الروابط الوهمية بروابط Google Forms الحقيقية
+    // المفاتيح هنا يجب أن تطابق الأسماء في حقل 'gouv_fr' من ملف البيانات
     const FORM_LINKS = {
       "Ben Arous": "https://forms.gle/benarous-form",
       "Ariana": "https://forms.gle/ariana-form",
@@ -116,12 +117,12 @@
       if(!L.Browser.ie && !L.Browser.opera && !L.Browser.edge){ layer.bringToFront(); }
       
       const props = layer.feature.properties;
-      const name = props.gouv_ar || 'غير معروف'; // <-- الإصلاح هنا
-      gNameEl.textContent = name;
+      const arabicName = props.gouv_ar || 'غير معروف';
+      gNameEl.textContent = arabicName;
       openFormBtn.disabled = false;
       openFormBtn.onclick = () => { 
-        const linkKey = props.gouv_fr; // <-- الإصلاح هنا
-        const link = FORM_LINKS[linkKey] || '#';
+        const frenchName = props.gouv_fr;
+        const link = FORM_LINKS[frenchName] || '#';
         if (link !== '#') {
             window.open(link, '_blank');
         } else {
@@ -137,10 +138,10 @@
     }
 
     function onEachFeature(feature, layer){
-      // هذا هو السطر الذي تم إصلاحه بشكل نهائي
-      const name = feature.properties.gouv_ar || 'غير معروف';
+      // هذا هو الإصلاح النهائي الذي يقرأ من الحقل الصحيح 'gouv_ar'
+      const arabicName = feature.properties.gouv_ar || 'غير معروف';
       
-      layer.bindTooltip(name, {
+      layer.bindTooltip(arabicName, {
           permanent: true, 
           direction: 'center', 
           className: 'governorate-label'
@@ -151,8 +152,8 @@
           mouseout: resetHighlight,
           click: (e) => {
               const props = e.target.feature.properties;
-              const linkKey = props.gouv_fr; // <-- الإصلاح هنا
-              const link = FORM_LINKS[linkKey] || '#';
+              const frenchName = props.gouv_fr;
+              const link = FORM_LINKS[frenchName] || '#';
               if (link !== '#') {
                   window.open(link, '_blank');
               } else {
