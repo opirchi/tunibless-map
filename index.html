@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>خريطة تونس - الولايات (نسخة محسنة)</title>
+  <title>خريطة تونس - التسجيل حسب الولاية</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
     body {
@@ -13,7 +13,22 @@
       margin: 0;
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background: #f0f0f0;
+      background: #f8f9fa;
+    }
+    .header-container {
+      padding: 15px;
+      background: #ffffff;
+      border-bottom: 1px solid #ddd;
+      text-align: center;
+    }
+    .header-container h1 {
+      margin: 0;
+      font-size: 22px;
+      color: #333;
+    }
+    .header-container p {
+        margin: 5px 0 0;
+        color: #666;
     }
     .map-container {
       position: relative;
@@ -23,24 +38,6 @@
       height: 100%;
       width: 100%;
       background: #fff;
-    }
-    .search-container {
-      padding: 10px;
-      background: #ffffff;
-      border-bottom: 1px solid #ddd;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .search-container label {
-      font-weight: bold;
-    }
-    #governorate-search {
-      padding: 8px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      flex-grow: 1;
-      max-width: 400px;
     }
     .label {
       background: rgba(255, 255, 255, 0.85);
@@ -54,7 +51,6 @@
       text-shadow: 0 0 2px white;
       color: #333;
     }
-    /* Custom Popup Style */
     .leaflet-popup-content-wrapper {
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -85,7 +81,6 @@
     .popup-link:hover {
       background-color: #0056b3;
     }
-    /* Loader Style */
     #loader {
       position: absolute;
       top: 50%;
@@ -96,7 +91,7 @@
       border-top: 5px solid #3498db;
       border-radius: 50%;
       animation: spin 1s linear infinite;
-      z-index: 1001; /* Above map tiles */
+      z-index: 1001;
       transform: translate(-50%, -50%);
     }
     @keyframes spin {
@@ -107,11 +102,9 @@
 </head>
 <body>
 
-  <div class="search-container">
-    <label for="governorate-search">ابحث عن ولاية:</label>
-    <select id="governorate-search">
-      <option value="">اختر ولاية...</option>
-    </select>
+  <div class="header-container">
+    <h1>خريطة التسجيل</h1>
+    <p>الرجاء اختيار ولايتك من الخريطة للبدء</p>
   </div>
 
   <div class="map-container">
@@ -121,7 +114,6 @@
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    // ---------- خام الروابط (عدل هنا إن احتجت) ----------
     const formsLinks = {
       "Ariana": "https://docs.google.com/forms/d/e/1FAIpQLSeIGzfgByZSGhInjFxcxslf5vyqScEaKQHm4VsXFtYv-miJCQ/viewform",
       "Beja": "https://docs.google.com/forms/d/e/1FAIpQLScDsTtGJyP-ZstwxkztGMKgZGmDPMKeyWGR1KMxrSdr0e7QcA/viewform",
@@ -150,7 +142,6 @@
     };
 
     const normalize = s => (s && String(s).toLowerCase().trim()) || "";
-
     const normalizedForms = {};
     for (const k in formsLinks) {
       normalizedForms[normalize(k)] = formsLinks[k];
@@ -160,10 +151,9 @@
       center: [33.8869, 9.5375],
       zoom: 7,
       zoomControl: true,
-      attributionControl: false
+      attributionControl: false 
     });
 
-    // Add a light basemap for context
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
       subdomains: 'abcd',
@@ -171,19 +161,16 @@
     }).addTo(map);
 
     const loader = document.getElementById('loader');
-    const searchSelect = document.getElementById('governorate-search');
-    const governorateLayers = {};
-
-    // Define styles
+    
     const defaultStyle = {
-      color: "#005a8d", // Dark blue border
+      color: "#005a8d",
       weight: 1.5,
-      fillColor: "#5da9dd", // Light blue fill
+      fillColor: "#5da9dd",
       fillOpacity: 0.7
     };
 
     const highlightStyle = {
-      fillColor: '#ffc107', // Yellow highlight
+      fillColor: '#ffc107',
       fillOpacity: 0.9
     };
 
@@ -193,36 +180,32 @@
         const tunisiaLayer = L.geoJSON(geojson, {
           style: defaultStyle,
           onEachFeature: function(feature, layer) {
-            const nameFr = feature.properties?.gouv_fr || feature.properties?.gouv || "";
+            const nameFr = feature.properties?.gouv_fr || "";
             const nameAr = feature.properties?.gouv_ar || "";
             const labelText = nameAr || nameFr || "غير معروف";
             const lookupKey = normalize(nameFr || nameAr);
-            
-            // Store layer for search functionality
-            governorateLayers[labelText] = layer;
 
-            // Attach a permanent label (tooltip)
             layer.bindTooltip(labelText, {
               permanent: true,
               direction: 'center',
               className: 'label'
             });
 
-            // Prepare popup content
             const formUrl = normalizedForms[lookupKey] || null;
             const popupHtml = formUrl
               ? `<b>${labelText}</b><br><a href="${formUrl}" target="_blank" class="popup-link">📋 فتح الاستمارة</a>`
               : `<b>${labelText}</b><br>لا يوجد رابط استمارة`;
             layer.bindPopup(popupHtml);
             
-            // --- Event Listeners ---
             layer.on({
                 mouseover: (e) => e.target.setStyle(highlightStyle),
                 mouseout: (e) => tunisiaLayer.resetStyle(e.target),
                 click: (e) => {
                     map.fitBounds(e.target.getBounds());
                     if (formUrl) {
-                        window.open(formUrl, '_blank');
+                        setTimeout(() => {
+                           window.open(formUrl, '_blank');
+                        }, 300); // Small delay to allow zoom animation to start
                     } else {
                         e.target.openPopup();
                     }
@@ -231,21 +214,19 @@
           }
         }).addTo(map);
 
-        // Fit map to Tunisia and set max bounds
+        // --- تعديل: تحديد إطار الخريطة ومستوى التصغير ---
         const bounds = tunisiaLayer.getBounds();
         map.fitBounds(bounds);
-        map.setMaxBounds(bounds.pad(0.25));
 
-        // --- Populate Search Dropdown ---
-        const sortedGovernorates = Object.keys(governorateLayers).sort((a, b) => a.localeCompare(b, 'ar'));
-        sortedGovernorates.forEach(name => {
-          const option = document.createElement('option');
-          option.value = name;
-          option.textContent = name;
-          searchSelect.appendChild(option);
-        });
+        // انتظر قليلاً حتى يتم ضبط الزوم الأولي، ثم احصل عليه
+        setTimeout(() => {
+            const minZoomLevel = map.getZoom();
+            map.setMinZoom(minZoomLevel); // منع التصغير لأبعد من هذا المستوى
+        }, 500);
         
-        // --- Hide Loader ---
+        // منع المستخدم من الابتعاد كثيراً عن تونس
+        map.setMaxBounds(bounds.pad(0.1)); 
+        
         loader.style.display = 'none';
       })
       .catch(err => {
@@ -254,15 +235,6 @@
         alert("خطأ: لم يتم تحميل الخريطة بشكل صحيح. يرجى التحقق من وجود ملف TN-gouvernorats.geojson.");
       });
 
-    // --- Search Event Listener ---
-    searchSelect.addEventListener('change', function() {
-      const selectedName = this.value;
-      if (selectedName && governorateLayers[selectedName]) {
-        const layer = governorateLayers[selectedName];
-        map.fitBounds(layer.getBounds());
-        layer.openPopup();
-      }
-    });
   </script>
 </body>
 </html>
