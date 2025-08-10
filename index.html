@@ -82,8 +82,8 @@
           },
           onEachFeature: function(feature, layer) {
             // try multiple property names (fallbacks)
-            const nameFr = feature.properties?.name_fr || feature.properties?.name || feature.properties?.nom || "";
-            const nameAr = feature.properties?.name_ar || feature.properties?.name || "";
+            const nameFr = feature.properties?.gouv_fr || feature.properties?.gouv || feature.properties?.gouv || "";
+            const nameAr = feature.properties?.gouv_ar || feature.properties?.gouv || "";
 
             const labelText = nameAr || nameFr || "غير معروف";
             const lookupKey = normalize(nameFr || nameAr);
@@ -147,3 +147,4 @@
   </script>
 </body>
 </html>
+
