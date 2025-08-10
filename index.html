@@ -9,27 +9,17 @@
     :root{ --accent:#00796b; --muted:#55606a; --hover-color: #ffc107; }
     body{ font-family: "Noto Kufi Arabic", "Segoe UI", Tahoma, Arial; margin:0; background:#f5fbf9; color:#073642 }
     .wrap{ max-width:1200px; margin:20px auto; padding:18px; display:grid; grid-template-columns: 1fr 360px; gap:18px }
-    header{ grid-column:1/-1; display:flex; justify-content:space-between; align-items:center; gap:8px }
-    header h1{ margin:0; font-size:20px }
-    header p{ margin:0; color:var(--muted) }
+    header{ grid-column:1/-1; }
     .map-card{ background:#fff; border-radius:12px; padding:10px; box-shadow:0 10px 30px rgba(3,56,48,0.06); height:720px; overflow:hidden }
     #map{ width:100%; height:100%; border-radius:8px; background-color: #eef6f2; }
-    .side{ background:linear-gradient(180deg,#ffffff,#fbfffe); border-radius:12px; padding:14px; box-shadow:0 10px 26px rgba(3,56,48,0.04); height:720px; overflow:auto }
-    .side h2{ margin:0 0 6px 0 }
-    .meta{ color:var(--muted); font-size:14px }
+    .side{ background:#fff; border-radius:12px; padding:14px; box-shadow:0 10px 26px rgba(3,56,48,0.04); height:720px; overflow:auto }
     .btn{ display:inline-block; padding:10px 12px; border-radius:10px; font-weight:700; border:0; cursor:pointer; width: 100%; text-align: center; }
     .btn-primary{ background:var(--accent); color:#fff; transition: background-color 0.2s ease; }
     .btn-primary:hover{ background: #005a4f; }
     .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
     .governorate-label {
-      background: transparent;
-      border: none;
-      box-shadow: none;
-      color: #073642;
-      font-size: 11px;
-      font-weight: bold;
-      text-shadow: 1px 1px 2px #fff, -1px -1px 2px #fff, 1px -1px 2px #fff, -1px 1px 2px #fff;
-      pointer-events: none;
+      background: transparent; border: none; box-shadow: none; color: #073642;
+      font-size: 11px; font-weight: bold; text-shadow: 1px 1px 3px #fff; pointer-events: none;
     }
     @media (max-width:980px){ .wrap{ grid-template-columns:1fr } .side{ height:auto } .map-card{ height:520px } }
   </style>
@@ -37,19 +27,15 @@
 <body>
   <div class="wrap">
     <header>
-      <div>
-        <h1>📍 الخريطة التفاعلية لتونس — المحافظات</h1>
-        <p class="meta">انقر على أي محافظة لفتح نموذج التسجيل الخاص بها.</p>
-      </div>
+      <h1>📍 الخريطة التفاعلية لتونس — المحافظات</h1>
+      <p style="color:var(--muted)">انقر على أي محافظة لفتح نموذج التسجيل الخاص بها.</p>
     </header>
 
-    <div class="map-card" role="region" aria-label="خريطة تونس التفاعلية">
-      <div id="map"></div>
-    </div>
+    <div class="map-card"> <div id="map"></div> </div>
 
-    <aside class="side" aria-live="polite">
+    <aside class="side">
       <h2 id="g-name">اختر محافظة</h2>
-      <div class="meta" id="side-sub">مرّر الفأرة فوق أي محافظة لعرض التفاصيل</div>
+      <p class="meta" id="side-sub">مرّر الفأرة فوق أي محافظة لعرض التفاصيل</p>
       <div style="margin-top:12px">
         <button class="btn btn-primary" id="openFormBtn" disabled>فتح نموذج التسجيل</button>
       </div>
@@ -57,110 +43,63 @@
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
   <script>
     const GEOJSON_URL = 'TN-gouvernorats.geojson';
-    
     const FORM_LINKS = {
-      "Ben Arous": "https://forms.gle/benarous-form", "Ariana": "https://forms.gle/ariana-form", "Bizerte": "https://forms.gle/bizerte-form",
-      "Beja": "https://forms.gle/beja-form", "Gabes": "https://forms.gle/gabes-form", "Gafsa": "https://forms.gle/gafsa-form",
-      "Jendouba": "https://forms.gle/jendouba-form", "Kairouan": "https://forms.gle/kairouan-form", "Kasserine": "https://forms.gle/kasserine-form",
-      "Kebili": "https://forms.gle/kebili-form", "Le Kef": "https://forms.gle/kef-form", "Mahdia": "https://forms.gle/mahdia-form",
-      "Mannouba": "https://forms.gle/manouba-form", "Mednine": "https://forms.gle/medenine-form", "Monastir": "https://forms.gle/monastir-form",
-      "Nabeul": "https://forms.gle/nabeul-form", "Sfax": "https://forms.gle/sfax-form", "Sidi Bouzid": "https://forms.gle/sidibouzid-form",
-      "Siliana": "https://forms.gle/siliana-form", "Sousse": "https://forms.gle/sousse-form", "Tataouine": "https://forms.gle/tataouine-form",
-      "Tozeur": "https://forms.gle/tozeur-form", "Tunis": "https://forms.gle/tunis-form", "Zaghouan": "https://forms.gle/zaghouan-form"
+      "Ben Arous": "#link", "Ariana": "#link", "Bizerte": "#link", "Béja": "#link",
+      "Gabès": "#link", "Gafsa": "#link", "Jendouba": "#link", "Kairouan": "#link",
+      "Kasserine": "#link", "Kébili": "#link", "Le Kef": "#link", "Mahdia": "#link",
+      "La Manouba": "#link", "Médenine": "#link", "Monastir": "#link", "Nabeul": "#link",
+      "Sfax": "#link", "Sidi Bouzid": "#link", "Siliana": "#link", "Sousse": "#link",
+      "Tataouine": "#link", "Tozeur": "#link", "Tunis": "#link", "Zaghouan": "#link"
     };
 
-    const corner1 = L.latLng(37.4, 11.7);
-    const corner2 = L.latLng(30.2, 7.5);
-    const bounds = L.latLngBounds(corner1, corner2);
-
-    const map = L.map('map', { 
-      zoomControl:true, minZoom:7, maxZoom:12,
-      maxBounds: bounds, maxBoundsViscosity: 0.9 
-    }).setView([34.0, 9.0], 7);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
+    const map = L.map('map').setView([34.0, 9.0], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { minZoom:7, maxZoom:12, attribution: '© OpenStreetMap' }).addTo(map);
 
     const gNameEl = document.getElementById('g-name');
     const openFormBtn = document.getElementById('openFormBtn');
+    let geojsonLayer;
+
+    function styleFeature() { return { color: '#0b6b5e', weight: 1.2, fillColor: '#e6f9f4', fillOpacity: 0.8 }; }
     
-    function styleFeature(){
-      return { color: '#0b6b5e', weight: 1.2, fillColor: '#e6f_9f4', fillOpacity: 0.8 };
+    function highlightFeature(e) {
+      const layer = e.target;
+      layer.setStyle({ weight: 2.5, color: '#014d43', fillColor: 'var(--hover-color)', fillOpacity: 0.9 });
+      layer.bringToFront();
+      gNameEl.textContent = layer.feature.properties.NAME_1;
+      openFormBtn.disabled = false;
     }
 
-    let governorateLayers = {};
+    function resetHighlight(e) {
+      geojsonLayer.resetStyle(e.target);
+      gNameEl.textContent = 'اختر محافظة';
+      openFormBtn.disabled = true;
+    }
 
-    async function loadGeoJSON(){
-      try{
-        const resp = await fetch(GEOJSON_URL);
-        if(!resp.ok) throw new Error('فشل تحميل GeoJSON');
-        const data = await resp.json();
-
-        // **المنطق الجديد: تجميع القطع حسب المعرّف الفريد**
-        const featuresById = {};
-        data.features.forEach(feature => {
-            const id = feature.properties.gouv_id;
-            if (!id) return;
-            if (!featuresById[id]) {
-                featuresById[id] = [];
-            }
-            featuresById[id].push(feature);
-        });
-
-        // **المنطق الجديد: إنشاء مجموعة واحدة لكل ولاية**
-        for (const id in featuresById) {
-            const features = featuresById[id];
-            const props = features[0].properties; // All pieces share the same properties
-            const arabicName = props.gouv_ar || 'غير معروف';
-            const frenchName = props.gouv_fr;
-
-            const layers = features.map(feature => L.geoJSON(feature));
-            const featureGroup = L.featureGroup(layers)
-                .setStyle(styleFeature())
-                .addTo(map);
-
-            featureGroup.bindTooltip(arabicName, {
-                permanent: true, 
-                direction: 'center', 
-                className: 'governorate-label'
-            });
-
-            featureGroup.on({
-                mouseover: () => {
-                    featureGroup.setStyle({ weight: 2.5, color: '#014d43', fillColor: 'var(--hover-color)', fillOpacity: 0.9 });
-                    featureGroup.bringToFront();
-                    gNameEl.textContent = arabicName;
-                    openFormBtn.disabled = false;
-                    openFormBtn.onclick = () => {
-                        const link = FORM_LINKS[frenchName] || '#';
-                        if (link !== '#') window.open(link, '_blank');
-                        else alert('لا يوجد رابط تسجيل لهذه المحافظة بعد.');
-                    };
-                },
-                mouseout: () => {
-                    featureGroup.setStyle(styleFeature());
-                    gNameEl.textContent = 'اختر محافظة';
-                    openFormBtn.disabled = true;
-                },
-                click: () => {
-                    const link = FORM_LINKS[frenchName] || '#';
-                    if (link !== '#') window.open(link, '_blank');
-                    else alert('لا يوجد رابط تسجيل لهذه المحافظة بعد.');
-                }
-            });
+    function onEachFeature(feature, layer) {
+      layer.bindTooltip(feature.properties.NAME_1, { permanent: true, direction: 'center', className: 'governorate-label' });
+      layer.on({
+        mouseover: highlightFeature,
+        mouseout: resetHighlight,
+        click: (e) => {
+          const link = FORM_LINKS[e.target.feature.properties.NAME_1] || '#';
+          if (link !== '#') window.open(link, '_blank');
+          else alert('لا يوجد رابط تسجيل لهذه المحافظة بعد.');
         }
-        
-      } catch(e) { 
-        console.error('Error:', e); 
-        alert('حدث خطأ أثناء تحميل الخريطة.'); 
-      }
+      });
     }
 
-    loadGeoJSON();
+    fetch(GEOJSON_URL)
+      .then(response => response.json())
+      .then(data => {
+        geojsonLayer = L.geoJSON(data, { onEachFeature: onEachFeature, style: styleFeature }).addTo(map);
+        map.fitBounds(geojsonLayer.getBounds());
+      })
+      .catch(error => {
+        console.error('Error loading GeoJSON:', error);
+        alert('حدث خطأ فادح أثناء تحميل الخريطة.');
+      });
   </script>
 </body>
 </html>
