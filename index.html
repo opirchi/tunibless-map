@@ -45,13 +45,12 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script>
     const GEOJSON_URL = 'TN-gouvernorats.geojson';
+    
+    // المفاتيح هنا يجب أن تطابق الأسماء في حقل 'gouv_fr'
     const FORM_LINKS = {
-      "Ben Arous": "#link", "Ariana": "#link", "Bizerte": "#link", "Béja": "#link",
-      "Gabès": "#link", "Gafsa": "#link", "Jendouba": "#link", "Kairouan": "#link",
-      "Kasserine": "#link", "Kébili": "#link", "Le Kef": "#link", "Mahdia": "#link",
-      "La Manouba": "#link", "Médenine": "#link", "Monastir": "#link", "Nabeul": "#link",
-      "Sfax": "#link", "Sidi Bouzid": "#link", "Siliana": "#link", "Sousse": "#link",
-      "Tataouine": "#link", "Tozeur": "#link", "Tunis": "#link", "Zaghouan": "#link"
+      "Ben Arous": "#", "Zaghouan": "#", "Mannouba": "#", "Sousse": "#", "Beja": "#", "Le kef": "#", "Kairouan": "#", "Jandouba": "#",
+      "Mahdia": "#", "Tataouine": "#", "Mednine": "#", "Gafsa": "#", "Gabes": "#",
+      /* أكمل بقية الروابط هنا */
     };
 
     const map = L.map('map').setView([34.0, 9.0], 7);
@@ -67,7 +66,7 @@
       const layer = e.target;
       layer.setStyle({ weight: 2.5, color: '#014d43', fillColor: 'var(--hover-color)', fillOpacity: 0.9 });
       layer.bringToFront();
-      gNameEl.textContent = layer.feature.properties.NAME_1;
+      gNameEl.textContent = layer.feature.properties.gouv_ar; // <-- الإصلاح هنا
       openFormBtn.disabled = false;
     }
 
@@ -78,12 +77,15 @@
     }
 
     function onEachFeature(feature, layer) {
-      layer.bindTooltip(feature.properties.NAME_1, { permanent: true, direction: 'center', className: 'governorate-label' });
+      const arabicName = feature.properties.gouv_ar || 'غير معروف'; // <-- الإصلاح هنا
+      layer.bindTooltip(arabicName, { permanent: true, direction: 'center', className: 'governorate-label' });
+      
       layer.on({
         mouseover: highlightFeature,
         mouseout: resetHighlight,
         click: (e) => {
-          const link = FORM_LINKS[e.target.feature.properties.NAME_1] || '#';
+          const frenchName = e.target.feature.properties.gouv_fr; // <-- الإصلاح هنا
+          const link = FORM_LINKS[frenchName] || '#';
           if (link !== '#') window.open(link, '_blank');
           else alert('لا يوجد رابط تسجيل لهذه المحافظة بعد.');
         }
