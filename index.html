@@ -3,69 +3,28 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>خريطة تونس - التسجيل حسب الولاية</title>
+  <title>لوحة تحكم خريطة تونس</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
-    body {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background: #f8f9fa;
+    body, html { height: 100%; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    #map { height: 100%; width: 100%; background: #f0f0f0; }
+    /* تصميم مفتاح الخريطة */
+    .legend {
+      padding: 10px;
+      line-height: 20px;
+      color: #555;
+      background: rgba(255,255,255,0.9);
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      border-radius: 5px;
     }
-    .header-container {
-      padding: 15px;
-      background: #ffffff;
-      border-bottom: 1px solid #ddd;
-      text-align: center;
-      flex-shrink: 0;
-    }
-    .header-container h1 {
-      margin: 0;
-      font-size: 22px;
-      color: #333;
-    }
-    .header-container p {
-        margin: 5px 0 0;
-        color: #666;
-    }
-    .map-container {
-      position: relative;
-      flex-grow: 1;
-    }
-    #map {
-      height: 100%;
-      width: 100%;
-      background: #fff;
-    }
-    /* --- تصميم جديد: لوحة المعلومات --- */
-    .info-panel {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 260px;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      z-index: 1000;
-      transition: background-color 0.3s;
-    }
-    .info-panel h4 {
-      margin: 0 0 10px;
-      font-size: 18px;
-      color: #005a8d;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 8px;
-    }
-    .info-panel p {
-      margin: 5px 0;
-      font-size: 14px;
-    }
-    .info-panel .default-text {
-        color: #777;
+    .legend i {
+      width: 18px;
+      height: 18px;
+      float: right;
+      margin-left: 8px;
+      opacity: 0.9;
+      border: 1px solid rgba(0,0,0,0.2);
     }
     .label {
       background: rgba(255, 255, 255, 0.85);
@@ -73,159 +32,121 @@
       padding: 3px 8px;
       border-radius: 4px;
       font-size: 13px;
-      font-weight: bold;
-      white-space: nowrap;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      text-shadow: 0 0 2px white;
-      color: #333;
-    }
-    .leaflet-popup-content-wrapper {
-      border-radius: 8px;
-    }
-    .leaflet-popup-content b {
-      font-size: 18px;
-      color: #005a8d;
     }
     #loader {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 50px;
-      height: 50px;
-      border: 5px solid #f3f3f3;
-      border-top: 5px solid #3498db;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      z-index: 1001;
-      transform: translate(-50%, -50%);
+        position: absolute; top: 50%; left: 50%; width: 50px; height: 50px;
+        border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%;
+        animation: spin 1s linear infinite; z-index: 1001; transform: translate(-50%, -50%);
     }
-    @keyframes spin {
-      0% { transform: translate(-50%, -50%) rotate(0deg); }
-      100% { transform: translate(-50%, -50%) rotate(360deg); }
-    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
-
-  <div class="header-container">
-    <h1>خريطة التسجيل</h1>
-    <p>الرجاء اختيار ولايتك من الخريطة للبدء</p>
-  </div>
-
-  <div class="map-container">
-    <div id="map"></div>
-    <div id="loader"></div>
-    <div id="info-panel" class="info-panel">
-      <h4>معلومات الولاية</h4>
-      <p class="default-text">مرّر الفأرة فوق أي ولاية لعرض التفاصيل هنا.</p>
-    </div>
+  <div id="map">
+      <div id="loader"></div>
   </div>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    // --- بيانات جديدة: قم بتعبئة هذه البيانات بمعلوماتك الحقيقية ---
-    // المفتاح يجب أن يكون مطابقاً للاسم الفرنسي (gouv_fr) في ملف GeoJSON
-    const governorateData = {
-      "Tunis": { members: 1500, coordinator: "أحمد بن علي" },
-      "Sfax": { members: 1250, coordinator: "فاطمة القروي" },
-      "Sousse": { members: 980, coordinator: "محمد أمين" },
-      "Ariana": { members: 750, coordinator: "سارة العبيدي" },
-      "Nabeul": { members: 1100, coordinator: "علياء الشاذلي" },
-      // ... أضف بقية الولايات هنا
-    };
-    
-    const formsLinks = {
-        "Ariana": "https://docs.google.com/forms/d/e/1FAIpQLSeIGzfgByZSGhInjFxcxslf5vyqScEaKQHm4VsXFtYv-miJCQ/viewform", "Beja": "https://docs.google.com/forms/d/e/1FAIpQLScDsTtGJyP-ZstwxkztGMKgZGmDPMKeyWGR1KMxrSdr0e7QcA/viewform", "Ben Arous": "https://docs.google.com/forms/d/e/1FAIpQLSeLsolZbo5wQ-93bH3ffVphPx2KEIkboswDQ87v9MosOb5txA/viewform", "Bizerte": "https://docs.google.com/forms/d/e/1FAIpQLSeoSe8ZFLXXh4nyCPX-qYalNkOAMpQnCYDMD2kskpEvwJ4JiA/viewform", "Gabes": "https://docs.google.com/forms/d/e/1FAIpQLSeonk4YES79GrsuzczWTxp7NxBPinCiOdR5VpEPvXWpTEw8XA/viewform", "Gafsa": "https://docs.google.com/forms/d/e/1FAIpQLSdypdTUT8Bb7nLg8WVeJ8w030mbZJ8NCU3ltH4hC3YM19q3RA/viewform", "Jendouba": "https://docs.google.com/forms/d/e/1FAIpQLScgGlJwQAl7O7PinXf8pCupylVzWdP69f-bscQag7i0LlbVig/viewform", "Kairouan": "https://docs.google.com/forms/d/e/1FAIpQLSd-j6GZFTt0bG_UPqGeHEPxMETFfyyXW3F9IQE17eDQFig8wA/viewform", "Kasserine": "https://docs.google.com/forms/d/e/1FAIpQLSfc2HFx7o_jDx2aJ85tnWZcuVK-ylH2s24qT2LCBbrVkBpv5A/viewform", "Kebili": "https://docs.google.com/forms/d/e/1FAIpQLSds9-iNpbhZDDYvG-9dvN9LLeQcd3mN2s0sR3_bGblY3tjm9A/viewform", "Le Kef": "https://docs.google.com/forms/d/e/1FAIpQLSescTjA_TZUB2T8upCt3bLbiqN-T9gmZwH5-cpgPfUmjou5sw/viewform", "Mahdia": "https://docs.google.com/forms/d/e/1FAIpQLSd2e2LnvCp5PRsjWCk18SqxffASW25O9Fp9W20DPnPgMSqwGw/viewform", "Manouba": "https://docs.google.com/forms/d/e/1FAIpQLSfbMUil_LlnE1xaYW3BKKmRtRJpc6k55ufx5aMGS9TNP7oclg/viewform", "Medenine": "https://docs.google.com/forms/d/e/1FAIpQLScZNmOkZQIcFzop9XJTcgjueJAg2XqiDWD2O8Hk3n7F3MCG_Q/viewform", "Monastir": "https://docs.google.com/forms/d/e/1FAIpQLSewTK4rBmqaQoI69Ja9vPLrkual0rcyILTgpg5rGJq5D6SfJg/viewform", "Nabeul": "https://docs.google.com/forms/d/e/1FAIpQLSekivAqyuE8Wb9Bf6IvDYfi7O-y159dpyXduTlmsDNI10AVtw/viewform", "Sfax": "https://docs.google.com/forms/d/e/1FAIpQLScilM_Tjq3-smIDbyxNfEiZnbbuDUK4ww92s8ju4VNkoUeC9w/viewform", "Sidi Bouzid": "https://docs.google.com/forms/d/e/1FAIpQLSfvWAc9xFU-YGRwEc9WPuBisUtKUnLwmM6MPw6mv1DzJYZecQ/viewform", "Siliana": "https://docs.google.com/forms/d/e/1FAIpQLSdZ0eKwHOv-Mf07tugXwmt_vxPRvdx_ZJH8mWXJuF8bNiBDBQ/viewform", "Sousse": "https://docs.google.com/forms/d/e/1FAIpQLSe33qs8SD6ZDFNsNovYB1byXzPzap4u3WNxqQQi4Ca7EpixGg/viewform", "Tataouine": "https://docs.google.com/forms/d/e/1FAIpQLScau2aVzneLDLv4atr0ouUvVx1vzC_A8z6DcAl1Gu43UXO0aQ/viewform", "Tozeur": "https://docs.google.com/forms/d/e/1FAIpQLScYUXdyEDgy5LQjufhK7kamNV6HrwGN_tqvbszi1bpAE0r45Q/viewform", "Tunis": "https://docs.google.com/forms/d/e/1FAIpQLSdLp23YSS1HARjCq8DZL5AzNoxJ808lteqnuvfqA1IeoAghpw/viewform", "Zaghouan": "https://docs.google.com/forms/d/e/1FAIpQLSdHSr9wNzqhvfuTI3FD3OXT6XGRJ0h13DBHCxtxJ31vTY-pfA/viewform"
-    };
-
-    const normalize = s => (s && String(s).toLowerCase().trim()) || "";
-    const normalizedForms = {};
-    for (const k in formsLinks) {
-      normalizedForms[normalize(k)] = formsLinks[k];
-    }
-
-    const map = L.map('map', { center: [33.8869, 9.5375], zoom: 7, zoomControl: true, attributionControl: false });
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap &copy; CARTO', subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+    // --- الخطوة الأهم: ضع الرابط الذي نسخته من Google Sheets هنا ---
+    const googleSheetUrl = 'ضع هنا رابط ملف CSV الذي نسخته من جوجل شيت';
 
     const loader = document.getElementById('loader');
-    const infoPanel = document.getElementById('info-panel'); // مقبض للوحة المعلومات
-    
-    const defaultStyle = { color: "#005a8d", weight: 1.5, fillColor: "#5da9dd", fillOpacity: 0.7 };
-    const highlightStyle = { fillColor: '#ffc107', fillOpacity: 0.9 };
+    const map = L.map('map', { center: [34, 9.5], zoom: 7, zoomControl: true, attributionControl: false });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap &copy; CARTO' }).addTo(map);
 
-    // --- دالة جديدة: لتحديث لوحة المعلومات ---
-    function updateInfoPanel(properties) {
-        if (properties) {
-            const displayName = properties.gouv_ar || properties.gouv_fr;
-            const dataKey = properties.gouv_fr; // استخدام الاسم الفرنسي كمفتاح للبيانات
-            const data = governorateData[dataKey];
-            
-            if (data) {
-                infoPanel.innerHTML = `<h4>${displayName}</h4>
-                                     <p><strong>المنسق الجهوي:</strong> ${data.coordinator}</p>
-                                     <p><strong>عدد الأعضاء:</strong> ${data.members.toLocaleString('ar')}</p>`;
-            } else {
-                infoPanel.innerHTML = `<h4>${displayName}</h4>
-                                     <p>لا توجد معلومات إضافية متاحة لهذه الولاية.</p>`;
-            }
-        } else {
-            // إعادة اللوحة للحالة الافتراضية
-            infoPanel.innerHTML = `<h4>معلومات الولاية</h4>
-                                 <p class="default-text">مرّر الفأرة فوق أي ولاية لعرض التفاصيل هنا.</p>`;
-        }
+    let geojsonLayer;
+    let memberData = {};
+
+    // --- دالة لتحديد اللون بناءً على عدد الأعضاء ---
+    function getColor(members) {
+      if (typeof members !== 'number') return '#a9a9a9'; // لون رمادي للبيانات غير المتاحة
+      return members > 1000 ? '#084594' :
+             members > 500  ? '#2171b5' :
+             members > 250  ? '#4292c6' :
+             members > 100  ? '#6baed6' :
+             members > 0    ? '#9ecae1' :
+                              '#deebf7'; // لون للأعضاء القلائل جداً
+    }
+    
+    // --- دالة لتصميم كل ولاية ---
+    function style(feature) {
+      const gouvName = feature.properties.gouv_fr;
+      const members = memberData[gouvName];
+      return {
+        fillColor: getColor(members),
+        weight: 1.5,
+        opacity: 1,
+        color: 'white',
+        fillOpacity: 0.8
+      };
     }
 
-    fetch("TN-gouvernorats.geojson")
-      .then(resp => resp.json())
-      .then(geojson => {
-        const tunisiaLayer = L.geoJSON(geojson, {
-          style: defaultStyle,
-          onEachFeature: function(feature, layer) {
-            const nameFr = feature.properties?.gouv_fr || "";
-            const nameAr = feature.properties?.gouv_ar || "";
-            const labelText = nameAr || nameFr || "غير معروف";
-            const lookupKey = normalize(nameFr || nameAr);
-
-            layer.bindTooltip(labelText, { permanent: true, direction: 'center', className: 'label' });
-            
-            const formUrl = normalizedForms[lookupKey] || null;
-            layer.bindPopup(formUrl ? `<b>${labelText}</b>...` : `<b>${labelText}</b>...`);
-
-            // --- تعديل: تحديث أحداث الفأرة ---
-            layer.on({
-                mouseover: (e) => {
-                    e.target.setStyle(highlightStyle);
-                    updateInfoPanel(e.target.feature.properties); // تحديث اللوحة
-                },
-                mouseout: (e) => {
-                    tunisiaLayer.resetStyle(e.target);
-                    updateInfoPanel(null); // إعادة تعيين اللوحة
-                },
-                click: (e) => {
-                    map.fitBounds(e.target.getBounds());
-                    if (formUrl) {
-                        setTimeout(() => { window.open(formUrl, '_blank'); }, 300);
-                    }
-                }
-            });
-          }
-        }).addTo(map);
-
-        const bounds = tunisiaLayer.getBounds();
-        map.fitBounds(bounds);
-        setTimeout(() => {
-            const minZoomLevel = map.getZoom();
-            map.setMinZoom(minZoomLevel);
-        }, 500);
-        map.setMaxBounds(bounds.pad(0.1)); 
-        
-        loader.style.display = 'none';
-      })
-      .catch(err => {
-        console.error("خطأ: ", err);
-        loader.style.display = 'none';
-        alert("خطأ: لم يتم تحميل الخريطة بشكل صحيح.");
+    // --- تحميل البيانات من المصدرين معاً ---
+    Promise.all([
+      fetch('TN-gouvernorats.geojson').then(res => res.json()),
+      fetch(googleSheetUrl).then(res => res.ok ? res.text() : Promise.reject('رابط جوجل شيت غير صحيح أو غير منشور'))
+    ])
+    .then(([geojson, csvData]) => {
+      // 1. تحليل بيانات CSV
+      const parsed = Papa.parse(csvData, { header: true, skipEmptyLines: true });
+      parsed.data.forEach(row => {
+        // تحويل عدد الأعضاء إلى رقم وتخزينه
+        memberData[row.Governorate] = parseInt(row.Members, 10);
       });
+
+      // 2. إعداد طبقة الخريطة
+      geojsonLayer = L.geoJSON(geojson, {
+        style: style,
+        onEachFeature: function(feature, layer) {
+          layer.on({
+            mouseover: e => {
+              const layer = e.target;
+              layer.setStyle({ weight: 3, color: '#333' });
+              layer.bringToFront();
+            },
+            mouseout: e => {
+              geojsonLayer.resetStyle(e.target);
+            },
+            click: e => map.fitBounds(e.target.getBounds())
+          });
+          // إضافة التلميح (الاسم)
+          const nameAr = feature.properties.gouv_ar || '';
+          const gouvNameFr = feature.properties.gouv_fr;
+          const memberCount = memberData[gouvNameFr];
+          const popupText = `<b>${nameAr}</b><br>${memberCount ? `عدد الأعضاء: ${memberCount.toLocaleString('ar')}` : 'بيانات غير متاحة'}`;
+          layer.bindPopup(popupText);
+        }
+      }).addTo(map);
+
+      map.fitBounds(geojsonLayer.getBounds());
+      loader.style.display = 'none'; // إخفاء مؤشر التحميل
+
+      // 3. إضافة مفتاح الخريطة (Legend)
+      const legend = L.control({ position: 'bottomright' });
+      legend.onAdd = function (map) {
+        const div = L.DomUtil.create('div', 'info legend');
+        const grades = [0, 100, 250, 500, 1000];
+        let labels = ['<strong>عدد الأعضاء</strong>'];
+        for (let i = 0; i < grades.length; i++) {
+          const from = grades[i];
+          const to = grades[i + 1];
+          labels.push(
+            '<i style="background:' + getColor(from + 1) + '"></i> ' +
+            from.toLocaleString('ar') + (to ? '&ndash;' + to.toLocaleString('ar') : '+')
+          );
+        }
+        div.innerHTML = labels.join('<br>');
+        return div;
+      };
+      legend.addTo(map);
+
+    })
+    .catch(error => {
+      console.error('خطأ في جلب البيانات:', error);
+      loader.style.display = 'none';
+      alert('حدث خطأ. يرجى التأكد من صحة رابط Google Sheet وأنه منشور بشكل صحيح.');
+    });
   </script>
 </body>
 </html>
