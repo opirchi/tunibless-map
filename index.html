@@ -186,9 +186,14 @@
             const props = feature.properties;
             const gouvNameFr = props.gouv_fr;
             const nameAr = props.gouv_ar || gouvNameFr;
+            gouvFrToAr[gouvNameFr] = nameAr;
+            
             const gouvData = governorateData[gouvNameFr];
             const formUrl = formsLinks[gouvNameFr];
+
+            // --- تعديل: إعداد محتوى منفصل للتلميح والنقر ---
             
+            // 1. محتوى النافذة المنبثقة (للنقر على الموبايل)
             let popupText = `<b>${nameAr}</b>`;
             if (gouvData && gouvData.members > 0) {
               popupText += `<br>عدد الأعضاء: ${gouvData.members.toLocaleString('ar')}`;
@@ -199,16 +204,32 @@
             if (formUrl) {
               popupText += `<a href="${formUrl}" target="_blank" class="popup-link">فتح استمارة التسجيل</a>`;
             }
+            layer.bindPopup(popupText);
             
+            // 2. محتوى التلميح (للمرور على الكمبيوتر)
+            let tooltipContent = `<b>${nameAr}</b>`;
+            if (gouvData) {
+              if (gouvData.members > 0) {
+                tooltipContent += `<br>عدد الأعضاء: ${gouvData.members.toLocaleString('ar')}`;
+              }
+              if (gouvData.coordinator_name) {
+                tooltipContent += `<br>المنسق الجهوي: ${gouvData.coordinator_name}`;
+              }
+            }
+            // ربط التلميح الذي سيظهر فقط عند المرور
+            layer.bindTooltip(tooltipContent);
+
+
+            // --- منطق التفاعل ---
             if (isTouchDevice) {
-              layer.bindPopup(popupText);
+              // منطق اللمس للموبايل (يفتح النافذة المنبثقة)
               layer.on('click', function(e) {
                 if (lastSelectedLayer) geojsonLayer.resetStyle(lastSelectedLayer);
                 e.target.setStyle({ weight: 3, color: '#333', fillOpacity: 1 });
                 lastSelectedLayer = e.target;
               });
             } else {
-              layer.bindTooltip(popupText.replace(/<a[^>]*>.*?<\/a>/g, "")); // Show tooltip without links
+              // منطق الفأرة للكمبيوتر (المرور يظهر التلميح، والنقر يفتح الرابط)
               layer.on({
                 mouseover: e => e.target.setStyle({ weight: 3, color: '#333', fillOpacity: 1 }),
                 mouseout: e => geojsonLayer.resetStyle(e.target),
@@ -256,4 +277,5 @@
   </script>
 </body>
 </html>
+
 
