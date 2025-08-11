@@ -3,150 +3,181 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لوحة تحكم خريطة تونس</title>
+  <title>خريطة تونس التفاعلية</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
-    body, html { height: 100%; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body, html { height: 100%; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
     #map { height: 100%; width: 100%; background: #f0f0f0; }
-    /* تصميم مفتاح الخريطة */
-    .legend {
-      padding: 10px;
-      line-height: 20px;
-      color: #555;
-      background: rgba(255,255,255,0.9);
-      box-shadow: 0 0 15px rgba(0,0,0,0.2);
-      border-radius: 5px;
-    }
-    .legend i {
-      width: 18px;
-      height: 18px;
-      float: right;
-      margin-left: 8px;
-      opacity: 0.9;
-      border: 1px solid rgba(0,0,0,0.2);
-    }
-    .label {
-      background: rgba(255, 255, 255, 0.85);
-      border: none;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-size: 13px;
-    }
-    #loader {
-        position: absolute; top: 50%; left: 50%; width: 50px; height: 50px;
-        border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%;
-        animation: spin 1s linear infinite; z-index: 1001; transform: translate(-50%, -50%);
-    }
+    #loader { position: absolute; top: 50%; left: 50%; width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; z-index: 1001; transform: translate(-50%, -50%); }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    /* تصميم مفتاح الخريطة */
+    .legend { padding: 10px; line-height: 20px; color: #555; background: rgba(255,255,255,0.9); box-shadow: 0 0 15px rgba(0,0,0,0.2); border-radius: 5px; }
+    .legend i { width: 18px; height: 18px; float: right; margin-left: 8px; opacity: 0.9; border: 1px solid rgba(0,0,0,0.2); }
+    
+    /* تصميم زر إعادة التعيين */
+    .reset-view-button {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 800;
+      background: white;
+      color: #333;
+      width: 30px;
+      height: 30px;
+      line-height: 30px;
+      text-align: center;
+      border-radius: 4px;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+      cursor: pointer;
+      font-size: 1.2rem;
+      text-decoration: none;
+    }
+    .reset-view-button:hover {
+      background: #f4f4f4;
+    }
+
+    /* تصميم النافذة المنبثقة */
+    .popup-link { display: inline-block; margin-top: 10px; padding: 8px 15px; background-color: #007bff; color: white !important; text-decoration: none; border-radius: 5px; font-weight: bold; }
+    .popup-link:hover { background-color: #0056b3; }
   </style>
 </head>
 <body>
   <div id="map">
-      <div id="loader"></div>
+    <div id="loader"></div>
+    <a id="reset-view-btn" class="reset-view-button" title="إعادة تعيين العرض">&#x21BA;</a>
   </div>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    // --- الخطوة الأهم: ضع الرابط الذي نسخته من Google Sheets هنا ---
-    const googleSheetUrl = 'ضع هنا رابط ملف CSV الذي نسخته من جوجل شيت';
+    // --- تعديل: العودة إلى البيانات المحلية المؤقتة ---
+    // قم بتعبئة هذه البيانات بمعلوماتك الصحيحة
+    const governorateData = {
+      "Tunis": { members: 1500 },
+      "Sfax": { members: 1250 },
+      "Sousse": { members: 980 },
+      "Ariana": { members: 750 },
+      "Nabeul": { members: 1100 },
+      "Ben Arous": { members: 600 },
+      "Monastir": { members: 800 },
+      "Kairouan": { members: 450 },
+      // ... أكمل بقية الولايات هنا
+    };
 
+    const formsLinks = {
+      "Ariana": "https://docs.google.com/forms/d/e/1FAIpQLSeIGzfgByZSGhInjFxcxslf5vyqScEaKQHm4VsXFtYv-miJCQ/viewform", "Beja": "https://docs.google.com/forms/d/e/1FAIpQLScDsTtGJyP-ZstwxkztGMKgZGmDPMKeyWGR1KMxrSdr0e7QcA/viewform", "Ben Arous": "https://docs.google.com/forms/d/e/1FAIpQLSeLsolZbo5wQ-93bH3ffVphPx2KEIkboswDQ87v9MosOb5txA/viewform", "Bizerte": "https://docs.google.com/forms/d/e/1FAIpQLSeoSe8ZFLXXh4nyCPX-qYalNkOAMpQnCYDMD2kskpEvwJ4JiA/viewform", "Gabes": "https://docs.google.com/forms/d/e/1FAIpQLSeonk4YES79GrsuzczWTxp7NxBPinCiOdR5VpEPvXWpTEw8XA/viewform", "Gafsa": "https://docs.google.com/forms/d/e/1FAIpQLSdypdTUT8Bb7nLg8WVeJ8w030mbZJ8NCU3ltH4hC3YM19q3RA/viewform", "Jendouba": "https://docs.google.com/forms/d/e/1FAIpQLScgGlJwQAl7O7PinXf8pCupylVzWdP69f-bscQag7i0LlbVig/viewform", "Kairouan": "https://docs.google.com/forms/d/e/1FAIpQLSd-j6GZFTt0bG_UPqGeHEPxMETFfyyXW3F9IQE17eDQFig8wA/viewform", "Kasserine": "https://docs.google.com/forms/d/e/1FAIpQLSfc2HFx7o_jDx2aJ85tnWZcuVK-ylH2s24qT2LCBbrVkBpv5A/viewform", "Kebili": "https://docs.google.com/forms/d/e/1FAIpQLSds9-iNpbhZDDYvG-9dvN9LLeQcd3mN2s0sR3_bGblY3tjm9A/viewform", "Le Kef": "https://docs.google.com/forms/d/e/1FAIpQLSescTjA_TZUB2T8upCt3bLbiqN-T9gmZwH5-cpgPfUmjou5sw/viewform", "Mahdia": "https://docs.google.com/forms/d/e/1FAIpQLSd2e2LnvCp5PRsjWCk18SqxffASW25O9Fp9W20DPnPgMSqwGw/viewform", "Manouba": "https://docs.google.com/forms/d/e/1FAIpQLSfbMUil_LlnE1xaYW3BKKmRtRJpc6k55ufx5aMGS9TNP7oclg/viewform", "Medenine": "https://docs.google.com/forms/d/e/1FAIpQLScZNmOkZQIcFzop9XJTcgjueJAg2XqiDWD2O8Hk3n7F3MCG_Q/viewform", "Monastir": "https://docs.google.com/forms/d/e/1FAIpQLSewTK4rBmqaQoI69Ja9vPLrkual0rcyILTgpg5rGJq5D6SfJg/viewform", "Nabeul": "https://docs.google.com/forms/d/e/1FAIpQLSekivAqyuE8Wb9Bf6IvDYfi7O-y159dpyXduTlmsDNI10AVtw/viewform", "Sfax": "https://docs.google.com/forms/d/e/1FAIpQLScilM_Tjq3-smIDbyxNfEiZnbbuDUK4ww92s8ju4VNkoUeC9w/viewform", "Sidi Bouzid": "https://docs.google.com/forms/d/e/1FAIpQLSfvWAc9xFU-YGRwEc9WPuBisUtKUnLwmM6MPw6mv1DzJYZecQ/viewform", "Siliana": "https://docs.google.com/forms/d/e/1FAIpQLSdZ0eKwHOv-Mf07tugXwmt_vxPRvdx_ZJH8mWXJuF8bNiBDBQ/viewform", "Sousse": "https://docs.google.com/forms/d/e/1FAIpQLSe33qs8SD6ZDFNsNovYB1byXzPzap4u3WNxqQQi4Ca7EpixGg/viewform", "Tataouine": "https://docs.google.com/forms/d/e/1FAIpQLScau2aVzneLDLv4atr0ouUvVx1vzC_A8z6DcAl1Gu43UXO0aQ/viewform", "Tozeur": "https://docs.google.com/forms/d/e/1FAIpQLScYUXdyEDgy5LQjufhK7kamNV6HrwGN_tqvbszi1bpAE0r45Q/viewform", "Tunis": "https://docs.google.com/forms/d/e/1FAIpQLSdLp23YSS1HARjCq8DZL5AzNoxJ808lteqnuvfqA1IeoAghpw/viewform", "Zaghouan": "https://docs.google.com/forms/d/e/1FAIpQLSdHSr9wNzqhvfuTI3FD3OXT6XGRJ0h13DBHCxtxJ31vTY-pfA/viewform"
+    };
+    
+    const normalize = s => (s && String(s).toLowerCase().trim()) || "";
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     const loader = document.getElementById('loader');
     const map = L.map('map', { center: [34, 9.5], zoom: 7, zoomControl: true, attributionControl: false });
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap &copy; CARTO' }).addTo(map);
 
     let geojsonLayer;
-    let memberData = {};
+    let lastSelectedLayer = null;
+    const layersByGouvFr = {}; // جديد: لتخزين الطبقات للوصول السريع عبر الرابط
 
-    // --- دالة لتحديد اللون بناءً على عدد الأعضاء ---
     function getColor(members) {
-      if (typeof members !== 'number') return '#a9a9a9'; // لون رمادي للبيانات غير المتاحة
-      return members > 1000 ? '#084594' :
-             members > 500  ? '#2171b5' :
-             members > 250  ? '#4292c6' :
-             members > 100  ? '#6baed6' :
-             members > 0    ? '#9ecae1' :
-                              '#deebf7'; // لون للأعضاء القلائل جداً
+      if (typeof members !== 'number') return '#a9a9a9';
+      return members > 1000 ? '#084594' : members > 500 ? '#2171b5' : members > 250 ? '#4292c6' : members > 100 ? '#6baed6' : members > 0 ? '#9ecae1' : '#deebf7';
     }
     
-    // --- دالة لتصميم كل ولاية ---
     function style(feature) {
-      const gouvName = feature.properties.gouv_fr;
-      const members = memberData[gouvName];
-      return {
-        fillColor: getColor(members),
-        weight: 1.5,
-        opacity: 1,
-        color: 'white',
-        fillOpacity: 0.8
-      };
+      const members = governorateData[feature.properties.gouv_fr]?.members;
+      return { fillColor: getColor(members), weight: 1.5, opacity: 1, color: 'white', fillOpacity: 0.8 };
     }
 
-    // --- تحميل البيانات من المصدرين معاً ---
-    Promise.all([
-      fetch('TN-gouvernorats.geojson').then(res => res.json()),
-      fetch(googleSheetUrl).then(res => res.ok ? res.text() : Promise.reject('رابط جوجل شيت غير صحيح أو غير منشور'))
-    ])
-    .then(([geojson, csvData]) => {
-      // 1. تحليل بيانات CSV
-      const parsed = Papa.parse(csvData, { header: true, skipEmptyLines: true });
-      parsed.data.forEach(row => {
-        // تحويل عدد الأعضاء إلى رقم وتخزينه
-        memberData[row.Governorate] = parseInt(row.Members, 10);
+    fetch('TN-gouvernorats.geojson')
+      .then(res => res.json())
+      .then(geojson => {
+        geojsonLayer = L.geoJSON(geojson, {
+          style: style,
+          onEachFeature: function(feature, layer) {
+            const props = feature.properties;
+            const nameAr = props.gouv_ar || '';
+            const gouvNameFr = props.gouv_fr;
+            
+            layersByGouvFr[gouvNameFr] = layer; // جديد: تعبئة كائن الطبقات
+
+            const memberCount = governorateData[gouvNameFr]?.members;
+            const formUrl = formsLinks[gouvNameFr];
+            let popupText = `<b>${nameAr}</b><br>${memberCount ? `عدد الأعضاء: ${memberCount.toLocaleString('ar')}` : 'بيانات غير متاحة'}`;
+            if (formUrl) {
+              popupText += `<br><a href="${formUrl}" target="_blank" class="popup-link">📋 فتح الاستمارة</a>`;
+            }
+            layer.bindPopup(popupText);
+
+            // منطق التفاعل المزدوج للموبايل والكمبيوتر
+            function selectLayer(e) {
+                if (lastSelectedLayer) geojsonLayer.resetStyle(lastSelectedLayer);
+                const targetLayer = e.target;
+                targetLayer.setStyle({ weight: 3, color: '#333' });
+                targetLayer.bringToFront();
+                lastSelectedLayer = targetLayer;
+                // --- جديد: تحديث رابط الصفحة عند النقر ---
+                window.location.hash = gouvNameFr;
+            }
+
+            if (isTouchDevice) {
+                layer.on('click', function(e) {
+                    selectLayer(e);
+                    L.DomEvent.stopPropagation(e);
+                });
+            } else {
+                layer.on({
+                    mouseover: e => e.target.setStyle({ weight: 3, color: '#333' }),
+                    mouseout: e => geojsonLayer.resetStyle(e.target),
+                    click: e => {
+                        selectLayer(e);
+                        map.fitBounds(e.target.getBounds());
+                    }
+                });
+            }
+          }
+        }).addTo(map);
+        
+        const bounds = geojsonLayer.getBounds();
+        map.fitBounds(bounds);
+        
+        // --- جديد: زر إعادة تعيين العرض ---
+        document.getElementById('reset-view-btn').addEventListener('click', function() {
+          map.fitBounds(bounds);
+          if (lastSelectedLayer) {
+            geojsonLayer.resetStyle(lastSelectedLayer);
+            lastSelectedLayer = null;
+          }
+          window.location.hash = ''; // إزالة التحديد من الرابط
+        });
+        
+        // --- جديد: التعامل مع الرابط عند تحميل الصفحة ---
+        const initialGouv = window.location.hash.substring(1);
+        if (initialGouv && layersByGouvFr[initialGouv]) {
+          const targetLayer = layersByGouvFr[initialGouv];
+          map.fitBounds(targetLayer.getBounds());
+          targetLayer.fire('click');
+        }
+
+        loader.style.display = 'none';
+
+        const legend = L.control({ position: 'bottomright' });
+        legend.onAdd = function (map) {
+            const div = L.DomUtil.create('div', 'info legend');
+            const grades = [0, 100, 250, 500, 1000];
+            let labels = ['<strong>عدد الأعضاء</strong>'];
+            for (let i = 0; i < grades.length; i++) {
+                const from = grades[i]; const to = grades[i + 1];
+                labels.push('<i style="background:' + getColor(from + 1) + '"></i> ' + from.toLocaleString('ar') + (to ? '&ndash;' + to.toLocaleString('ar') : '+'));
+            }
+            div.innerHTML = labels.join('<br>');
+            return div;
+        };
+        legend.addTo(map);
+
+      }).catch(error => {
+        console.error('خطأ في جلب البيانات:', error);
+        loader.style.display = 'none';
       });
-
-      // 2. إعداد طبقة الخريطة
-      geojsonLayer = L.geoJSON(geojson, {
-        style: style,
-        onEachFeature: function(feature, layer) {
-          layer.on({
-            mouseover: e => {
-              const layer = e.target;
-              layer.setStyle({ weight: 3, color: '#333' });
-              layer.bringToFront();
-            },
-            mouseout: e => {
-              geojsonLayer.resetStyle(e.target);
-            },
-            click: e => map.fitBounds(e.target.getBounds())
-          });
-          // إضافة التلميح (الاسم)
-          const nameAr = feature.properties.gouv_ar || '';
-          const gouvNameFr = feature.properties.gouv_fr;
-          const memberCount = memberData[gouvNameFr];
-          const popupText = `<b>${nameAr}</b><br>${memberCount ? `عدد الأعضاء: ${memberCount.toLocaleString('ar')}` : 'بيانات غير متاحة'}`;
-          layer.bindPopup(popupText);
-        }
-      }).addTo(map);
-
-      map.fitBounds(geojsonLayer.getBounds());
-      loader.style.display = 'none'; // إخفاء مؤشر التحميل
-
-      // 3. إضافة مفتاح الخريطة (Legend)
-      const legend = L.control({ position: 'bottomright' });
-      legend.onAdd = function (map) {
-        const div = L.DomUtil.create('div', 'info legend');
-        const grades = [0, 100, 250, 500, 1000];
-        let labels = ['<strong>عدد الأعضاء</strong>'];
-        for (let i = 0; i < grades.length; i++) {
-          const from = grades[i];
-          const to = grades[i + 1];
-          labels.push(
-            '<i style="background:' + getColor(from + 1) + '"></i> ' +
-            from.toLocaleString('ar') + (to ? '&ndash;' + to.toLocaleString('ar') : '+')
-          );
-        }
-        div.innerHTML = labels.join('<br>');
-        return div;
-      };
-      legend.addTo(map);
-
-    })
-    .catch(error => {
-      console.error('خطأ في جلب البيانات:', error);
-      loader.style.display = 'none';
-      alert('حدث خطأ. يرجى التأكد من صحة رابط Google Sheet وأنه منشور بشكل صحيح.');
-    });
   </script>
 </body>
 </html>
