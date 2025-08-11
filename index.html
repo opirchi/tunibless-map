@@ -16,6 +16,19 @@
     .reset-view-button:hover { background: #f4f4f4; }
     .popup-link { display: inline-block; margin-top: 10px; padding: 8px 15px; background-color: #007bff; color: white !important; text-decoration: none; border-radius: 5px; font-weight: bold; }
     .popup-link:hover { background-color: #0056b3; }
+    /* جديد: إعادة تصميم ليبل الأسماء الدائمة */
+    .label {
+      background: rgba(255, 255, 255, 0.85);
+      border: none;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: bold;
+      white-space: nowrap;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      text-shadow: 0 0 2px white;
+      color: #333;
+    }
   </style>
 </head>
 <body>
@@ -26,60 +39,45 @@
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    // --- الخطوة النهائية المطلوبة منك: ملء البيانات والروابط هنا ---
-    // استخدمت الأسماء الفرنسية كمفاتيح لضمان التطابق مع ملف الخريطة
+    // --- الخطوة النهائية المطلوبة منك: ملء بيانات الأعضاء ---
+    // يمكنك تعديل عدد الأعضاء لكل ولاية هنا
     const governorateData = {
-      "Tunis":      { members: 0 },
-      "Ben Arous":  { members: 0 },
-      "Ariana":     { members: 0 },
-      "Nabel":      { members: 0 }, // Note: Mismatch in GeoJSON `Nabel` vs common `Nabeul`
-      "Manouba":    { members: 0 },
-      "Bizerte":    { members: 0 },
-      "Zagouen":    { members: 0 },
-      "Jandouba":   { members: 0 },
-      "Beja":       { members: 0 },
-      "Tataouine":  { members: 0 },
-      "Mednine":    { members: 0 },
-      "Gabes":      { members: 0 },
-      "Kebili":     { members: 0 },
-      "Touzer":     { members: 0 }, // Note: Mismatch `Touzer` vs common `Tozeur`
-      "Gafsa":      { members: 0 },
-      "Sousse":     { members: 0 },
-      "Monastir":   { members: 0 },
-      "Mahdia":     { members: 0 },
-      "Sfax":       { members: 0 },
-      "Kairouan":   { members: 0 },
-      "kasserine":  { members: 0 }, // Note: Lowercase 'k' in GeoJSON
-      "Sidi Bouzid":{ members: 0 },
-      "Le kef":     { members: 0 }, // Note: `Le kef` in GeoJSON
-      "Siliana":    { members: 0 }
+      "Tunis":      { members: 0 }, "Ben Arous":  { members: 0 }, "Ariana":     { members: 0 },
+      "Nabel":      { members: 0 }, "Manouba":    { members: 0 }, "Bizerte":    { members: 0 },
+      "Zagouen":    { members: 0 }, "Jandouba":   { members: 0 }, "Beja":       { members: 0 },
+      "Tataouine":  { members: 0 }, "Mednine":    { members: 0 }, "Gabes":      { members: 0 },
+      "Kebili":     { members: 0 }, "Touzer":     { members: 0 }, "Gafsa":      { members: 0 },
+      "Sousse":     { members: 0 }, "Monastir":   { members: 0 }, "Mahdia":     { members: 0 },
+      "Sfax":       { members: 0 }, "Kairouan":   { members: 0 }, "kasserine":  { members: 0 },
+      "Sidi Bouzid":{ members: 0 }, "Le kef":     { members: 0 }, "Siliana":    { members: 0 }
     };
 
+    // --- تعديل: تم إضافة جميع روابط الولايات ---
     const formsLinks = {
-      "Tunis":      "",
-      "Ben Arous":  "",
-      "Ariana":     "",
-      "Nabel":      "",
-      "Manouba":    "",
-      "Bizerte":    "",
-      "Zagouen":    "",
-      "Jandouba":   "",
-      "Beja":       "",
-      "Tataouine":  "",
-      "Mednine":    "",
-      "Gabes":      "",
-      "Kebili":     "",
-      "Touzer":     "",
-      "Gafsa":      "",
-      "Sousse":     "",
-      "Monastir":   "",
-      "Mahdia":     "",
-      "Sfax":       "",
-      "Kairouan":   "",
-      "kasserine":  "",
-      "Sidi Bouzid":"",
-      "Le kef":     "",
-      "Siliana":    ""
+      "Ariana": "https://docs.google.com/forms/d/e/1FAIpQLSeIGzfgByZSGhInjFxcxslf5vyqScEaKQHm4VsXFtYv-miJCQ/viewform",
+      "Beja": "https://docs.google.com/forms/d/e/1FAIpQLScDsTtGJyP-ZstwxkztGMKgZGmDPMKeyWGR1KMxrSdr0e7QcA/viewform",
+      "Ben Arous": "https://docs.google.com/forms/d/e/1FAIpQLSeLsolZbo5wQ-93bH3ffVphPx2KEIkboswDQ87v9MosOb5txA/viewform",
+      "Bizerte": "https://docs.google.com/forms/d/e/1FAIpQLSeoSe8ZFLXXh4nyCPX-qYalNkOAMpQnCYDMD2kskpEvwJ4JiA/viewform",
+      "Gabes": "https://docs.google.com/forms/d/e/1FAIpQLSeonk4YES79GrsuzczWTxp7NxBPinCiOdR5VpEPvXWpTEw8XA/viewform",
+      "Gafsa": "https://docs.google.com/forms/d/e/1FAIpQLSdypdTUT8Bb7nLg8WVeJ8w030mbZJ8NCU3ltH4hC3YM19q3RA/viewform",
+      "Jandouba": "https://docs.google.com/forms/d/e/1FAIpQLScgGlJwQAl7O7PinXf8pCupylVzWdP69f-bscQag7i0LlbVig/viewform",
+      "Kairouan": "https://docs.google.com/forms/d/e/1FAIpQLSd-j6GZFTt0bG_UPqGeHEPxMETFfyyXW3F9IQE17eDQFig8wA/viewform",
+      "kasserine": "https://docs.google.com/forms/d/e/1FAIpQLSfc2HFx7o_jDx2aJ85tnWZcuVK-ylH2s24qT2LCBbrVkBpv5A/viewform",
+      "Kebili": "https://docs.google.com/forms/d/e/1FAIpQLSds9-iNpbhZDDYvG-9dvN9LLeQcd3mN2s0sR3_bGblY3tjm9A/viewform",
+      "Le kef": "https://docs.google.com/forms/d/e/1FAIpQLSescTjA_TZUB2T8upCt3bLbiqN-T9gmZwH5-cpgPfUmjou5sw/viewform",
+      "Mahdia": "https://docs.google.com/forms/d/e/1FAIpQLSd2e2LnvCp5PRsjWCk18SqxffASW25O9Fp9W20DPnPgMSqwGw/viewform",
+      "Manouba": "https://docs.google.com/forms/d/e/1FAIpQLSfbMUil_LlnE1xaYW3BKKmRtRJpc6k55ufx5aMGS9TNP7oclg/viewform",
+      "Mednine": "https://docs.google.com/forms/d/e/1FAIpQLScZNmOkZQIcFzop9XJTcgjueJAg2XqiDWD2O8Hk3n7F3MCG_Q/viewform",
+      "Monastir": "https://docs.google.com/forms/d/e/1FAIpQLSewTK4rBmqaQoI69Ja9vPLrkual0rcyILTgpg5rGJq5D6SfJg/viewform",
+      "Nabel": "https://docs.google.com/forms/d/e/1FAIpQLSekivAqyuE8Wb9Bf6IvDYfi7O-y159dpyXduTlmsDNI10AVtw/viewform",
+      "Sfax": "https://docs.google.com/forms/d/e/1FAIpQLScilM_Tjq3-smIDbyxNfEiZnbbuDUK4ww92s8ju4VNkoUeC9w/viewform",
+      "Sidi Bouzid": "https://docs.google.com/forms/d/e/1FAIpQLSfvWAc9xFU-YGRwEc9WPuBisUtKUnLwmM6MPw6mv1DzJYZecQ/viewform",
+      "Siliana": "https://docs.google.com/forms/d/e/1FAIpQLSdZ0eKwHOv-Mf07tugXwmt_vxPRvdx_ZJH8mWXJuF8bNiBDBQ/viewform",
+      "Sousse": "https://docs.google.com/forms/d/e/1FAIpQLSe33qs8SD6ZDFNsNovYB1byXzPzap4u3WNxqQQi4Ca7EpixGg/viewform",
+      "Tataouine": "https://docs.google.com/forms/d/e/1FAIpQLScau2aVzneLDLv4atr0ouUvVx1vzC_A8z6DcAl1Gu43UXO0aQ/viewform",
+      "Touzer": "https://docs.google.com/forms/d/e/1FAIpQLScYUXdyEDgy5LQjufhK7kamNV6HrwGN_tqvbszi1bpAE0r45Q/viewform",
+      "Tunis": "https://docs.google.com/forms/d/e/1FAIpQLSdLp23YSS1HARjCq8DZL5AzNoxJ808lteqnuvfqA1IeoAghpw/viewform",
+      "Zagouen": "https://docs.google.com/forms/d/e/1FAIpQLSdHSr9wNzqhvfuTI3FD3OXT6XGRJ0h13DBHCxtxJ31vTY-pfA/viewform"
     };
     
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -92,7 +90,7 @@
     const layersByGouvFr = {};
 
     function getColor(members) {
-      if (typeof members !== 'number' || members === 0) return '#a9a9a9'; // رمادي للبيانات غير المتاحة أو صفر
+      if (typeof members !== 'number' || members === 0) return '#a9a9a9';
       return members > 1000 ? '#084594' : members > 500 ? '#2171b5' : members > 250 ? '#4292c6' : members > 100 ? '#6baed6' : '#9ecae1';
     }
     
@@ -113,6 +111,13 @@
             
             layersByGouvFr[gouvNameFr] = layer;
 
+            // --- جديد: إضافة الليبل الدائم ---
+            layer.bindTooltip(nameAr, {
+              permanent: true,
+              direction: 'center',
+              className: 'label'
+            });
+
             const memberCount = governorateData[gouvNameFr]?.members;
             const formUrl = formsLinks[gouvNameFr];
             
@@ -123,7 +128,6 @@
             layer.bindPopup(popupText);
 
             if (isTouchDevice) {
-              // منطق اللمس للموبايل
               layer.on('click', function(e) {
                 if (lastSelectedLayer) geojsonLayer.resetStyle(lastSelectedLayer);
                 const targetLayer = e.target;
@@ -134,7 +138,6 @@
                 L.DomEvent.stopPropagation(e);
               });
             } else {
-              // --- تعديل: منطق الفأرة للكمبيوتر ---
               layer.on({
                 mouseover: e => e.target.setStyle({ weight: 3, color: '#333' }),
                 mouseout: e => geojsonLayer.resetStyle(e.target),
@@ -153,9 +156,7 @@
         
         const bounds = geojsonLayer.getBounds();
         map.fitBounds(bounds);
-        
-        // --- تعديل: تقييد صارم لحدود الخريطة ---
-        map.setMaxBounds(bounds); // يمنع التجول خارج حدود تونس
+        map.setMaxBounds(bounds);
         
         document.getElementById('reset-view-btn').addEventListener('click', function() {
           map.fitBounds(bounds);
