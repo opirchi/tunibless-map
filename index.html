@@ -64,55 +64,48 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 const regionData = {
-  "الشمال الشرقي": { coordinator_name: "صوفية الجلالي", coordinator_image: "image.jpg" },
-  "الشمال الغربي": { coordinator_name: "الاسم واللقب", coordinator_image: "image.jpg" },
-  "الوسط الشرقي": { coordinator_name: "الاسم واللقب", coordinator_image: "image.jpg" },
-  "الوسط الغربي": { coordinator_name: "الاسم واللقب", coordinator_image: "image.jpg" },
-  "الجنوب":       { coordinator_name: "الاسم واللقب", coordinator_image: "image.jpg" }
+  "Nord-Est": { coordinator_name: "Sofia Jallali" },
+  "Nord-Ouest": { coordinator_name: "Nom et Prénom" },
+  "Centre-Est": { coordinator_name: "Nom et Prénom" },
+  "Centre-Ouest": { coordinator_name: "Nom et Prénom" },
+  "Sud": { coordinator_name: "Nom et Prénom" }
 };
 
 const governorateData = {
-  "Tunis": { members: 1748, region: "الشمال الشرقي", coordinator_name: "منسق تونس" },
-  "Ariana": { members: 1074, region: "الشمال الشرقي", coordinator_name: "منسق أريانة" },
-  "Ben Arous": { members: 1559, region: "الشمال الشرقي", coordinator_name: "هاجر السيد" },
-  "Manouba": { members: 887, region: "الشمال الشرقي", coordinator_name: "حامد الدريدي" },
-  "Nabel": { members: 1494, region: "الشمال الشرقي", coordinator_name: "منسق نابل" },
-  "Zagouen": { members: 300, region: "الشمال الشرقي", coordinator_name: "منسق زغوان" },
-  "Bizerte": { members: 1004, region: "الشمال الشرقي", coordinator_name: "منسق بنزرت" },
-  "Beja": { members: 369, region: "الشمال الغربي", coordinator_name: "منسق باجة" },
-  "Jandouba": { members: 646, region: "الشمال الغربي", coordinator_name: "منسق جندوبة" },
-  "Le kef": { members: 831, region: "الشمال الغربي", coordinator_name: "منسق الكاف" },
-  "Siliana": { members: 234, region: "الشمال الغربي", coordinator_name: "منسق سليانة" },
-  "Sousse": { members: 1376, region: "الوسط الشرقي", coordinator_name: "منسق سوسة" },
-  "Monastir": { members: 1091, region: "الوسط الشرقي", coordinator_name: "منسق المنستير" },
-  "Mahdia": { members: 746, region: "الوسط الشرقي", coordinator_name: "منسق المهدية" },
-  "Sfax": { members: 1461, region: "الوسط الشرقي", coordinator_name: "منسق صفاقس" },
-  "Kairouan": { members: 618, region: "الوسط الغربي", coordinator_name: "منسق القيروان" },
-  "kasserine": { members: 485, region: "الوسط الغربي", coordinator_name: "منسق القصرين" },
-  "Sidi Bouzid": { members: 968, region: "الوسط الغربي", coordinator_name: "منسق سيدي بوزيد" },
-  "Gafsa": { members: 1447, region: "الوسط الغربي", coordinator_name: "منسق قفصة" },
-  "Touzer": { members: 972, region: "الجنوب", coordinator_name: "منسق توزر" },
-  "Kebili": { members: 802, region: "الجنوب", coordinator_name: "منسق قبلي" },
-  "Gabes": { members: 3806, region: "الجنوب", coordinator_name: "منسق قابس" },
-  "Mednine": { members: 2754, region: "الجنوب", coordinator_name: "منسق مدنين" },
-  "Tataouine": { members: 883, region: "الجنوب", coordinator_name: "منسق تطاوين" }
+  "Tunis": { members: 1748, region: "Nord-Est", name_de: "Tunis", coordinator_name: "Koordinator Tunis" },
+  "Ariana": { members: 1074, region: "Nord-Est", name_de: "Ariana", coordinator_name: "Koordinator Ariana" },
+  "Ben Arous": { members: 1559, region: "Nord-Est", name_de: "Ben Arous", coordinator_name: "Hager Said" },
+  "Manouba": { members: 887, region: "Nord-Est", name_de: "Manouba", coordinator_name: "Hamed Deridi" },
+  "Nabel": { members: 1494, region: "Nord-Est", name_de: "Nabeul", coordinator_name: "Koordinator Nabeul" },
+  "Zagouen": { members: 300, region: "Nord-Est", name_de: "Zaghouan", coordinator_name: "Koordinator Zaghouan" },
+  "Bizerte": { members: 1004, region: "Nord-Est", name_de: "Bizerte", coordinator_name: "Koordinator Bizerte" },
+  "Beja": { members: 369, region: "Nord-Ouest", name_de: "Béja", coordinator_name: "Koordinator Béja" },
+  "Jandouba": { members: 646, region: "Nord-Ouest", name_de: "Jendouba", coordinator_name: "Koordinator Jendouba" },
+  "Le kef": { members: 831, region: "Nord-Ouest", name_de: "Le Kef", coordinator_name: "Koordinator Le Kef" },
+  "Siliana": { members: 234, region: "Nord-Ouest", name_de: "Siliana", coordinator_name: "Koordinator Siliana" },
+  "Sousse": { members: 1376, region: "Centre-Est", name_de: "Sousse", coordinator_name: "Koordinator Sousse" },
+  "Monastir": { members: 1091, region: "Centre-Est", name_de: "Monastir", coordinator_name: "Koordinator Monastir" },
+  "Mahdia": { members: 746, region: "Centre-Est", name_de: "Mahdia", coordinator_name: "Koordinator Mahdia" },
+  "Sfax": { members: 1461, region: "Centre-Est", name_de: "Sfax", coordinator_name: "Koordinator Sfax" },
+  "Kairouan": { members: 618, region: "Centre-Ouest", name_de: "Kairouan", coordinator_name: "Koordinator Kairouan" },
+  "kasserine": { members: 485, region: "Centre-Ouest", name_de: "Kasserine", coordinator_name: "Koordinator Kasserine" },
+  "Sidi Bouzid": { members: 968, region: "Centre-Ouest", name_de: "Sidi Bouzid", coordinator_name: "Koordinator Sidi Bouzid" },
+  "Gafsa": { members: 1447, region: "Centre-Ouest", name_de: "Gafsa", coordinator_name: "Koordinator Gafsa" },
+  "Touzer": { members: 972, region: "Sud", name_de: "Tozeur", coordinator_name: "Koordinator Tozeur" },
+  "Kebili": { members: 802, region: "Sud", name_de: "Kébili", coordinator_name: "Koordinator Kebili" },
+  "Gabes": { members: 3806, region: "Sud", name_de: "Gabès", coordinator_name: "Koordinator Gabes" },
+  "Mednine": { members: 2754, region: "Sud", name_de: "Médenine", coordinator_name: "Koordinator Mednine" },
+  "Tataouine": { members: 883, region: "Sud", name_de: "Tataouine", coordinator_name: "Koordinator Tataouine" }
 };
 
-const formsLinks = { /* روابط الاستمارات كما في كودك الأصلي */ };
+const regionColors = { "Nord-Est": "#0096c7", "Nord-Ouest": "#52b69a", "Centre-Est": "#f77f00", "Centre-Ouest": "#ffe6a7", "Sud": "#e63946" };
 
-const regionColors = { "الشمال الشرقي": "#0096c7", "الشمال الغربي": "#52b69a", "الوسط الشرقي": "#f77f00", "الوسط الغربي": "#ffe6a7", "الجنوب": "#e63946" };
-
-const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-const loader = document.getElementById('loader');
-const regionFilter = document.getElementById('region-filter');
-const legendContainer = document.getElementById('legend-container');
-const toggleButton = document.getElementById('toggle-legend-btn');
-const map = L.map('map', { center: [34, 9.5], zoom: 7, zoomControl: false, attributionControl: false });
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {}).addTo(map);
+const map = L.map('map', { center: [34, 9.5], zoom: 7 });
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
 let geojsonLayer;
-let lastSelectedLayer = null;
-const regionBounds = {}, gouvFrToAr = {}, layersByGouvFr = {};
+const regionBounds = {};
+const gouvFrToDe = {};
 
 function style(feature) {
   const region = governorateData[feature.properties.gouv_fr]?.region;
@@ -122,118 +115,31 @@ function style(feature) {
 function onEachFeature(feature, layer) {
   const gouvFr = feature.properties.gouv_fr;
   const gouvData = governorateData[gouvFr];
-  const formUrl = formsLinks[gouvFr];
 
-  let popupText = `<b>${gouvFrToAr[gouvFr]}</b>`;
   if (gouvData) {
-    if (gouvData.members > 0) popupText += `<br>عدد الأعضاء: ${gouvData.members.toLocaleString('ar')}`;
-    if (gouvData.coordinator_name) popupText += `<hr style="margin: 8px 0;"><p style="margin:0;"><strong>المنسق الجهوي:</strong> ${gouvData.coordinator_name}</p>`;
-    if (formUrl) popupText += `<a href="${formUrl}" target="_blank" class="popup-link">فتح استمارة التسجيل</a>`;
-  }
-  layer.bindPopup(popupText);
-
-  if (!isTouchDevice) {
-    layer.bindTooltip(`<b>${gouvFrToAr[gouvFr]}</b>`, { permanent: false, direction: 'center', className: 'custom-tooltip' });
+    const center = layer.getBounds().getCenter();
+    L.marker(center, {
+      icon: L.divIcon({
+        className: 'label-div-icon',
+        html: `<b>${gouvData.name_de}</b>`,
+        iconSize: [100, 20],
+        iconAnchor: [50, 10]
+      })
+    }).addTo(map);
   }
 
   layer.on({
-    mouseover: e => {
-      if (regionFilter.value === 'all') {
-        e.target.setStyle({ weight: 3, color: '#333', fillOpacity: 1 });
-        e.target.bringToFront();
-      }
-    },
-    mouseout: e => {
-      if (regionFilter.value === 'all') geojsonLayer.resetStyle(e.target);
-    },
-    click: e => { if (formUrl) window.open(formUrl, '_blank'); }
+    mouseover: e => e.target.setStyle({ weight: 3, color: '#333', fillOpacity: 1 }),
+    mouseout: e => geojsonLayer.resetStyle(e.target)
   });
 }
 
 fetch('TN-gouvernorats.geojson')
 .then(res => res.json())
 .then(geojson => {
-  const regions = new Set();
-  geojson.features.forEach(feature => {
-    const gouvFr = feature.properties.gouv_fr;
-    gouvFrToAr[gouvFr] = feature.properties.gouv_ar || gouvFr;
-    layersByGouvFr[gouvFr] = null;
-    const data = governorateData[gouvFr];
-    if (data && data.region) {
-      regions.add(data.region);
-      const layerBounds = L.geoJSON(feature).getBounds();
-      if (!regionBounds[data.region]) regionBounds[data.region] = layerBounds;
-      else regionBounds[data.region].extend(layerBounds);
-    }
-  });
-
-  regions.forEach(region => {
-    const option = document.createElement('option');
-    option.value = region;
-    option.textContent = region;
-    regionFilter.appendChild(option);
-  });
-
   geojsonLayer = L.geoJSON(geojson, { style, onEachFeature }).addTo(map);
   const fullBounds = geojsonLayer.getBounds();
   map.fitBounds(fullBounds);
-  map.setMaxBounds(fullBounds.pad(0.1));
-
-  // Legend
-  function buildLegend() {
-    let html = '<h4>الأقاليم والمنسقين</h4>';
-    for (const regionName in regionData) {
-      const regionInfo = regionData[regionName];
-      html += `<div class="legend-region"><h5><i style="background:${regionColors[regionName]}"></i>${regionName}</h5>
-               <p><strong>المنسق الإقليمي:</strong> ${regionInfo.coordinator_name}</p><ul>`;
-      for (const gouvFr in governorateData) {
-        if (governorateData[gouvFr].region === regionName) {
-          const gouvData = governorateData[gouvFr];
-          const gouvAr = gouvFrToAr[gouvFr] || gouvFr;
-          const memberDisplay = gouvData.members > 0 ? `<span class="member-count">(${gouvData.members.toLocaleString('ar')})</span>` : '';
-          html += `<li data-gouv-fr="${gouvFr}"><span class="gov-name">${gouvAr}</span><div>${memberDisplay}<span class="coordinator-name">${gouvData.coordinator_name}</span></div></li>`;
-        }
-      }
-      html += `</ul></div>`;
-    }
-    legendContainer.innerHTML = html;
-  }
-  buildLegend();
-
-  toggleButton.addEventListener('click', e => { e.stopPropagation(); legendContainer.classList.toggle('visible'); });
-  map.on('click', () => legendContainer.classList.remove('visible'));
-
-  regionFilter.addEventListener('change', function() {
-    const selectedRegion = this.value;
-    if (selectedRegion === 'all') {
-      map.fitBounds(fullBounds);
-      geojsonLayer.eachLayer(layer => geojsonLayer.resetStyle(layer));
-    } else {
-      map.fitBounds(regionBounds[selectedRegion]);
-      geojsonLayer.eachLayer(layer => {
-        const gouvData = governorateData[layer.feature.properties.gouv_fr];
-        if (gouvData && gouvData.region === selectedRegion) geojsonLayer.resetStyle(layer);
-        else layer.setStyle({ fillOpacity: 0.1, weight: 0.5, color: '#ccc' });
-      });
-    }
-  });
-
-  document.getElementById('reset-view-btn').addEventListener('click', () => {
-    regionFilter.value = 'all';
-    regionFilter.dispatchEvent(new Event('change'));
-  });
-
-  legendContainer.querySelectorAll('li[data-gouv-fr]').forEach(item => {
-    const gouvFr = item.dataset.gouvFr;
-    const layer = layersByGouvFr[gouvFr];
-    if (layer) {
-      item.addEventListener('mouseover', () => { if (regionFilter.value === 'all') layer.fire('mouseover'); });
-      item.addEventListener('mouseout', () => { if (regionFilter.value === 'all') layer.fire('mouseout'); });
-      item.addEventListener('click', () => { if (isTouchDevice) layer.openPopup(); else layer.fire('click'); });
-    }
-  });
-
-  loader.style.display = 'none';
 });
 </script>
 </body>
