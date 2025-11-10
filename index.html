@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>خريطة أقاليم تونس</title>
+
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
     body, html { height: 100%; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; display: flex; flex-direction: column; overflow: hidden; background-color: #f0f0f0; }
@@ -137,6 +138,7 @@
     const toggleButton = document.getElementById('toggle-legend-btn');
     const map = L.map('map', { center: [34, 9.5], zoom: 7, zoomControl: false, attributionControl: false });
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {}).addTo(map);
+
     let geojsonLayer;
     let lastSelectedLayer = null;
     const regionBounds = {}, gouvFrToAr = {}, layersByGouvFr = {};
@@ -175,105 +177,84 @@
             gouvFrToAr[gouvFr] = feature.properties.gouv_ar || gouvFr;
             layersByGouvFr[gouvFr] = null;
             const data = governorateData[gouvFr];
-            if (data && data.region) {
-                regions.add(data.region);
-                const layerBounds = L.geoJSON(feature).getBounds();
-                if (!regionBounds[data.region]) { regionBounds[data.region] = layerBounds; } 
-                else { regionBounds[data.region].extend(layerBounds); }
-            }
+            if (data && data.region) regions.add(data.region);
         });
-        regions.forEach(region => {
-            const option = document.createElement('option');
-            option.value = region;
-            option.textContent = region;
-            regionFilter.appendChild(option);
-        });
+        regions.forEach(r => { const opt = document.createElement('option'); opt.value=r; opt.textContent=r; regionFilter.appendChild(opt); });
 
         geojsonLayer = L.geoJSON(geojson, {
           style: style,
           onEachFeature: function(feature, layer) {
-            const props = feature.properties;
-            const gouvNameFr = props.gouv_fr;
+            const gouvNameFr = feature.properties.gouv_fr;
             layersByGouvFr[gouvNameFr] = layer;
             const gouvData = governorateData[gouvNameFr];
             const formUrl = formsLinks[gouvNameFr];
 
-            // Popup
             let popupText = `<h3 style="margin:0;">${gouvFrToAr[gouvNameFr]}</h3>`;
             if (gouvData) {
-                if (gouvData.members > 0) popupText += `<p>عدد الأعضاء: ${gouvData.members.toLocaleString('ar')}</p>`;
-                if (gouvData.coordinator_name) popupText += `<p>المنسق الإقليمي: ${gouvData.coordinator_name}</p>`;
+              if (gouvData.members > 0) popupText += `<p>عدد الأعضاء: ${gouvData.members.toLocaleString('ar')}</p>`;
+              if (gouvData.coordinator_name) popupText += `<p>المنسق الإقليمي: ${gouvData.coordinator_name}</p>`;
             }
             if (formUrl) popupText += `<a href="${formUrl}" target="_blank" class="popup-link">فتح استمارة التسجيل</a>`;
             layer.bindPopup(popupText, { minWidth: 180 });
 
-            // Tooltip
             let tooltipContent = `<b>${gouvFrToAr[gouvNameFr]}</b>`;
-            if(gouvData) {
-                if (gouvData.members > 0) tooltipContent += `<br>عدد الأعضاء: ${gouvData.members.toLocaleString('ar')}`;
-                if (gouvData.coordinator_name) tooltipContent += `<br>المنسق: ${gouvData.coordinator_name}`;
+            if (gouvData) {
+              if (gouvData.members > 0) tooltipContent += `<br>عدد الأعضاء: ${gouvData.members.toLocaleString('ar')}`;
+              if (gouvData.coordinator_name) tooltipContent += `<br>المنسق: ${gouvData.coordinator_name}`;
             }
             layer.bindTooltip(tooltipContent, { sticky: true, direction: 'top', className: 'custom-tooltip' });
 
-            // Hover / Click
             if (isTouchDevice) {
               layer.on('click', e => {
-                  if (lastSelectedLayer) geojsonLayer.resetStyle(lastSelectedLayer);
-                  e.target.setStyle({ weight: 3, color: '#333', fillOpacity: 1 });
-                  lastSelectedLayer = e.target;
-                  layer.openPopup();
+                if (lastSelectedLayer) geojsonLayer.resetStyle(lastSelectedLayer);
+                e.target.setStyle({ weight: 3, color: '#333', fillOpacity: 1 });
+                lastSelectedLayer = e.target;
+                layer.openPopup();
               });
             } else {
               layer.on({
-                mouseover: e => { if (regionFilter.value==='all') e.target.setStyle({ weight: 3, color: '#333', fillOpacity: 1 }); },
-                mouseout: e => { if (regionFilter.value==='all') geojsonLayer.resetStyle(e.target); },
+                mouseover: e => { e.target.setStyle({ weight: 3, color: '#333', fillOpacity: 1 }); },
+                mouseout: e => { geojsonLayer.resetStyle(e.target); },
                 click: e => { if (formUrl) window.open(formUrl, '_blank'); }
               });
             }
           }
         }).addTo(map);
 
-        const fullBounds = geojsonLayer.getBounds();
-        map.fitBounds(fullBounds);
-        map.setMaxBounds(fullBounds.pad(0.1));
+        map.setView([34, 9.5], 7);
+        map.setMaxBounds(geojsonLayer.getBounds().pad(0.08));
         buildLegend();
 
-        toggleButton.addEventListener('click', e => { e.stopPropagation(); legendContainer.classList.toggle('visible'); });
-        map.on('click', () => legendContainer.classList.remove('visible'));
-
-        regionFilter.addEventListener('change', function() {
-            const selectedRegion = this.value;
-            if (selectedRegion === 'all') {
-                map.fitBounds(fullBounds);
-                geojsonLayer.eachLayer(layer => geojsonLayer.resetStyle(layer));
-            } else {
-                map.fitBounds(regionBounds[selectedRegion]);
-                geojsonLayer.eachLayer(layer => {
-                    const gouvData = governorateData[layer.feature.properties.gouv_fr];
-                    if (gouvData && gouvData.region === selectedRegion) geojsonLayer.resetStyle(layer);
-                    else layer.setStyle({ fillOpacity: 0.1, weight: 0.5, color: '#ccc' });
-                });
-            }
-        });
-
-        document.getElementById('reset-view-btn').addEventListener('click', () => {
-            regionFilter.value = 'all';
-            regionFilter.dispatchEvent(new Event('change'));
-        });
-
+        // ربط التفاعل مع عناصر legend
         legendContainer.querySelectorAll('li[data-gouv-fr]').forEach(item => {
-            const gouvFr = item.dataset.gouvFr;
-            const layer = layersByGouvFr[gouvFr];
-            if(layer) {
-                item.addEventListener('mouseover', () => { if(regionFilter.value==='all') layer.fire('mouseover'); });
-                item.addEventListener('mouseout', () => { if(regionFilter.value==='all') layer.fire('mouseout'); });
-                item.addEventListener('click', () => { if (isTouchDevice) layer.openPopup(); else layer.fire('click'); });
-            }
+          const gouvFr = item.dataset.gouvFr;
+          const layer = layersByGouvFr[gouvFr];
+          const formUrl = formsLinks[gouvFr];
+          if (!layer) return;
+          item.addEventListener('mouseover', () => layer.fire('mouseover'));
+          item.addEventListener('mouseout', () => layer.fire('mouseout'));
+          item.addEventListener('click', () => {
+            if (isTouchDevice) layer.openPopup(); else if (formUrl) window.open(formUrl, '_blank');
+          });
         });
 
-        loader.style.display = 'none';
+        document.getElementById('loader').style.display='none';
       });
+
+    regionFilter.addEventListener('change', e => {
+      const selectedRegion = e.target.value;
+      geojsonLayer.eachLayer(layer => {
+        const gouvNameFr = layer.feature.properties.gouv_fr;
+        const data = governorateData[gouvNameFr];
+        if (!data) return;
+        if (selectedRegion==='all') layer.setStyle(style(layer.feature));
+        else layer.setStyle(Object.assign(style(layer.feature), { fillOpacity: data.region===selectedRegion?1:0.1 }));
+      });
+    });
+
+    toggleButton.addEventListener('click', () => legendContainer.classList.toggle('visible'));
+    document.getElementById('reset-view-btn').addEventListener('click', () => map.setView([34, 9.5], 7));
   </script>
+
 </body>
 </html>
-
