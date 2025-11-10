@@ -205,19 +205,25 @@
             layer.bindTooltip(tooltipContent, { sticky: true, direction: 'top', className: 'custom-tooltip' });
 
             if (isTouchDevice) {
-              layer.on('click', e => {
-                if (lastSelectedLayer) geojsonLayer.resetStyle(lastSelectedLayer);
-                e.target.setStyle({ weight: 3, color: '#333', fillOpacity: 1 });
-                lastSelectedLayer = e.target;
-                layer.openPopup();
-              });
-            } else {
-              layer.on({
-                mouseover: e => { e.target.setStyle({ weight: 3, color: '#333', fillOpacity: 1 }); },
-                mouseout: e => { geojsonLayer.resetStyle(e.target); },
-                click: e => { if (formUrl) window.open(formUrl, '_blank'); }
-              });
-            }
+  // على الهاتف/الأجهزة اللوحية
+  layer.on('click', e => {
+    if (lastSelectedLayer) geojsonLayer.resetStyle(lastSelectedLayer);
+    e.target.setStyle({ weight: 3, color: '#333', fillOpacity: 1 });
+    lastSelectedLayer = e.target;
+    layer.openPopup(); // popup على الأجهزة اللمسية
+  });
+} else {
+  // على الحاسوب: النقر يفتح الرابط مباشرة، لا popup
+  layer.on({
+    mouseover: e => { e.target.setStyle({ weight: 3, color: '#333', fillOpacity: 1 }); },
+    mouseout: e => { geojsonLayer.resetStyle(e.target); },
+    click: e => {
+      const gouvFr = layer.feature.properties.gouv_fr;
+      const formUrl = formsLinks[gouvFr];
+      if (formUrl) window.open(formUrl, '_blank'); // فتح الرابط مباشرة
+    }
+  });
+}
           }
         }).addTo(map);
 
@@ -234,9 +240,13 @@
           item.addEventListener('mouseover', () => layer.fire('mouseover'));
           item.addEventListener('mouseout', () => layer.fire('mouseout'));
           item.addEventListener('click', () => {
-            if (isTouchDevice) layer.openPopup(); else if (formUrl) window.open(formUrl, '_blank');
-          });
-        });
+            const gouvFr = item.dataset.gouvFr;
+            const layer = layersByGouvFr[gouvFr];
+            if (!layer) return;
+            const formUrl = formsLinks[gouvFr];
+            if (isTouchDevice) layer.openPopup();       // popup على الهاتف
+            else if (formUrl) window.open(formUrl, '_blank'); // فتح الرابط على الحاسوب مباشرة
+});
 
         document.getElementById('loader').style.display='none';
       });
@@ -253,8 +263,11 @@
     });
 
     toggleButton.addEventListener('click', () => legendContainer.classList.toggle('visible'));
-    document.getElementById('reset-view-btn').addEventListener('click', () => map.setView([34, 9.5], 7));
+    document.getElementById('reset-view-btn').addEventListener('click', () => map.fitBounds(geojsonLayer.getBounds().pad(0.05)); // يظهر كل تونس بالكامل
+map.setMaxBounds(geojsonLayer.getBounds().pad(0.1));
+;
   </script>
 
 </body>
 </html>
+
