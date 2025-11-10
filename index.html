@@ -1,339 +1,278 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>خريطة أقاليم تونس</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <style>
-    body, html { height: 100%; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; display: flex; flex-direction: column; overflow: hidden; background-color: #f0f0f0; }
-    #header { padding: 10px 15px; background: #fff; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; flex-shrink: 0; }
-    #toggle-legend-btn { display: none; padding: 5px 10px; font-size: 1.2rem; background: #f8f8f8; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; }
-    #header label { font-weight: bold; flex-shrink: 0; }
-    #region-filter { padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 16px; flex-grow: 1; min-width: 200px; }
-    .main-container { position: relative; flex-grow: 1; display: flex; overflow: hidden; }
-    #legend-container { width: 340px; background: #fff; box-shadow: -2px 0 8px rgba(0,0,0,0.1); z-index: 1001; overflow-y: auto; flex-shrink: 0; transition: margin-right 0.3s ease; padding-bottom:20px;}
-    #map-wrapper { flex-grow: 1; position: relative; }
-    #map { height: 100%; width: 100%; }
-    #loader { position: absolute; top: 50%; left: 50%; width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; z-index: 1002; transform: translate(-50%, -50%); display: none; /* يبدأ مخفياً */ }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .legend-panel h4 { margin: 0; padding: 15px; text-align: center; background: #f9f9f9; border-bottom: 1px solid #eee; font-size: 18px; }
-    .legend-region { padding: 0 15px 15px; }
-    .legend-region h5 { margin: 15px 0 10px; padding-bottom: 5px; border-bottom: 1px solid #eee; display: flex; align-items: center; font-size: 16px; }
-    .legend-region h5 .region-icon { width: 20px; height: 20px; display: inline-block; margin-left: 8px; border-radius: 50%; border: 2px solid #555; }
-    .legend-panel ul { list-style: none; padding: 0; margin: 0; }
-    .legend-panel li { display: flex; justify-content: space-between; align-items: center; padding: 8px 5px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background-color 0.2s; }
-    .legend-panel li:hover { background-color: #f5f5f5; }
-    .legend-panel li:last-child { border-bottom: none; }
-    .legend-panel .gov-name { font-weight: 500; }
-    .legend-panel .coordinator-name { color: #555; font-size: 13px; }
-    .legend-panel .member-count { font-weight: bold; color: #007bff; margin-right: 8px; font-size: 13px; }
-    .reset-view-button { position: absolute; top: 10px; left: 10px; z-index: 1000; background: white; color: #333; width: 30px; height: 30px; line-height: 30px; text-align: center; border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.65); cursor: pointer; font-size: 1.2rem; text-decoration: none; }
-    .reset-view-button:hover { background: #f4f4f4; }
-    .leaflet-popup-content-wrapper { border-radius: 8px; }
-    .popup-link { display: block; text-align: center; margin-top: 10px; padding: 8px 15px; background-color: #007bff; color: white !important; text-decoration: none; border-radius: 5px; font-weight: bold; }
-    .leaflet-tooltip { background: rgba(0,0,0,0.7); color: white; border: none; padding: 8px; border-radius: 4px; box-shadow: none; }
-    .custom-tooltip { background: rgba(0,123,255,0.9) !important; color:#fff !important; font-size:14px; font-weight:bold; padding:6px 10px; border-radius:6px; }
-    #download-pdf-btn { padding: 8px 12px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px; }
-    #download-pdf-btn:hover { background: #0056b3; }
-    #download-pdf-btn:disabled { background: #555; cursor: not-allowed; } /* تنسيق الزر عند التعطيل */
-    @media (max-width: 768px) {
-      #toggle-legend-btn { display: block; }
-      #legend-container { position: absolute; height: 100%; margin-right: -340px; }
-      #legend-container.visible { margin-right: 0; }
-    }
-  </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>خريطة أقاليم تونس</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body, html { height: 100%; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; display: flex; flex-direction: column; overflow: hidden; background-color: #f0f0f0; }
+    #header { padding: 10px 15px; background: #fff; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; flex-shrink: 0; }
+    #toggle-legend-btn { display: none; padding: 5px 10px; font-size: 1.2rem; background: #f8f8f8; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; }
+    #header label { font-weight: bold; flex-shrink: 0; }
+    #region-filter { padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 16px; flex-grow: 1; min-width: 200px; }
+    .main-container { position: relative; flex-grow: 1; display: flex; overflow: hidden; }
+    #legend-container { width: 340px; background: #fff; box-shadow: -2px 0 8px rgba(0,0,0,0.1); z-index: 1001; overflow-y: auto; flex-shrink: 0; transition: margin-right 0.3s ease; padding-bottom:20px;}
+    #map-wrapper { flex-grow: 1; position: relative; }
+    #map { height: 100%; width: 100%; }
+    #loader { position: absolute; top: 50%; left: 50%; width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; z-index: 1002; transform: translate(-50%, -50%); }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .legend-panel h4 { margin: 0; padding: 15px; text-align: center; background: #f9f9f9; border-bottom: 1px solid #eee; font-size: 18px; }
+    .legend-region { padding: 0 15px 15px; }
+    .legend-region h5 { margin: 15px 0 10px; padding-bottom: 5px; border-bottom: 1px solid #eee; display: flex; align-items: center; font-size: 16px; }
+    .legend-region h5 .region-icon { width: 20px; height: 20px; display: inline-block; margin-left: 8px; border-radius: 50%; border: 2px solid #555; }
+    .legend-panel ul { list-style: none; padding: 0; margin: 0; }
+    .legend-panel li { display: flex; justify-content: space-between; align-items: center; padding: 8px 5px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background-color 0.2s; }
+    .legend-panel li:hover { background-color: #f5f5f5; }
+    .legend-panel li:last-child { border-bottom: none; }
+    .legend-panel .gov-name { font-weight: 500; }
+    .legend-panel .coordinator-name { color: #555; font-size: 13px; }
+    .legend-panel .member-count { font-weight: bold; color: #007bff; margin-right: 8px; font-size: 13px; }
+    .reset-view-button { position: absolute; top: 10px; left: 10px; z-index: 1000; background: white; color: #333; width: 30px; height: 30px; line-height: 30px; text-align: center; border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.65); cursor: pointer; font-size: 1.2rem; text-decoration: none; }
+    .reset-view-button:hover { background: #f4f4f4; }
+    .leaflet-popup-content-wrapper { border-radius: 8px; }
+    .popup-link { display: block; text-align: center; margin-top: 10px; padding: 8px 15px; background-color: #007bff; color: white !important; text-decoration: none; border-radius: 5px; font-weight: bold; }
+    .leaflet-tooltip { background: rgba(0,0,0,0.7); color: white; border: none; padding: 8px; border-radius: 4px; box-shadow: none; }
+    .custom-tooltip { background: rgba(0,123,255,0.9) !important; color:#fff !important; font-size:14px; font-weight:bold; padding:6px 10px; border-radius:6px; }
+    @media (max-width: 768px) {
+      #toggle-legend-btn { display: block; }
+      #legend-container { position: absolute; height: 100%; margin-right: -340px; }
+      #legend-container.visible { margin-right: 0; }
+    }
+  </style>
 </head>
 <body>
 
-  <div id="header">
-    <button id="toggle-legend-btn" title="إظهار/إخفاء الدليل">☰</button>
-    <div style="flex-basis:100%; display:flex; align-items:center; gap:10px;">
-      <img src="https://i.imgur.com/rvVqkm6.png" alt="المنسقة الوطنية" style="width:50px; height:50px; border-radius:50%; border:2px solid #007bff;">
-      <span style="font-weight:bold; font-size:16px;">المنسقة الوطنية: سعاد البش </span>
-      <button id="download-pdf-btn" title="تحميل الخريطة PDF">تحميل PDF</button>
-    </div>
-    <label for="region-filter">فلترة حسب الإقليم:</label>
-    <select id="region-filter">
-      <option value="all">كل الأقاليم</option>
-    </select>
-  </div>
+  <div id="header">
+    <button id="toggle-legend-btn" title="إظهار/إخفاء الدليل">☰</button>
+    <div style="flex-basis:100%; display:flex; align-items:center; gap:10px;">
+      <img src="https://i.imgur.com/rvVqkm6.png" alt="المنسقة الوطنية" style="width:50px; height:50px; border-radius:50%; border:2px solid #007bff;">
+      <span style="font-weight:bold; font-size:16px;">المنسقة الوطنية: سعاد البش </span>
+    </div>
+    <label for="region-filter">فلترة حسب الإقليم:</label>
+    <select id="region-filter">
+      <option value="all">كل الأقاليم</option>
+    </select>
+  </div>
 
-  <div class="main-container">
-    <div id="legend-container"></div>
-    <div id="map-wrapper">
-      <div id="map"></div>
-      <div id="loader"></div>       <a id="reset-view-btn" class="reset-view-button" title="إعادة تعيين العرض">&#x21BA;</a>
-    </div>
-  </div>
+  <div class="main-container">
+    <div id="legend-container"></div>
+    <div id="map-wrapper">
+      <div id="map"></div>
+      <div id="loader"></div>
+      <a id="reset-view-btn" class="reset-view-button" title="إعادة تعيين العرض">&#x21BA;</a>
+    </div>
+  </div>
 
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const regionData = {
+      "الشمال الشرقي": { coordinator_name: "صوفية الجلالي", coordinator_image: "image.jpg" },
+      "الشمال الغربي": { coordinator_name: "الاسم واللقب", coordinator_image: "image.jpg" },
+      "الوسط الشرقي": { coordinator_name: "الاسم واللقب", coordinator_image: "image.jpg" },
+      "الوسط الغربي": { coordinator_name: "الاسم واللقب", coordinator_image: "image.jpg" },
+      "الجنوب":       { coordinator_name: "الاسم واللقب", coordinator_image: "image.jpg" }
+    };
+    
+    const governorateData = {
+      "Tunis":     { members: 1748, region: "الشمال الشرقي", coordinator_name: "منسق تونس" },
+      "Ariana":      { members: 1074, region: "الشمال الشرقي", coordinator_name: "منسق أريانة" },
+      "Ben Arous": { members: 1559, region: "الشمال الشرقي", coordinator_name: "هاجر السيد" },
+      "Manouba":   { members: 887, region: "الشمال الشرقي", coordinator_name: "حامد الدريدي" },
+      "Nabel":     { members: 1494, region: "الشمال الشرقي", coordinator_name: "منسق نابل" },
+      "Zagouen":   { members: 300, region: "الشمال الشرقي", coordinator_name: "منسق زغوان" },
+      "Bizerte":   { members: 1004, region: "الشمال الشرقي", coordinator_name: "منسق بنزرت" },
+      "Beja":        { members: 369, region: "الشمال الغربي", coordinator_name: "منسق باجة" },
+      "Jandouba":    { members: 646, region: "الشمال الغربي", coordinator_name: "منسق جندوبة" },
+      "Le kef":      { members: 831, region: "الشمال الغربي", coordinator_name: "منسق الكاف" },
+      "Siliana":   { members: 234, region: "الشمال الغربي", coordinator_name: "منسق سليانة" },
+      "Sousse":      { members: 1376, region: "الوسط الشرقي", coordinator_name: "منسق سوسة" },
+      "Monastir":    { members: 1091, region: "الوسط الشرقي", coordinator_name: "منسق المنستير" },
+      "Mahdia":      { members: 746, region: "الوسط الشرقي", coordinator_name: "منسق المهدية" },
+      "Sfax":        { members: 1461, region: "الوسط الشرقي", coordinator_name: "منسق صفاقس" },
+      "Kairouan":    { members: 618, region: "الوسط الغربي", coordinator_name: "منسق القيروان" },
+      "kasserine": { members: 485, region: "الوسط الغربي", coordinator_name: "منسق القصرين" },
+      "Sidi Bouzid":{ members: 968, region: "الوسط الغربي", coordinator_name: "منسق سيدي بوزيد" },
+      "Gafsa":     { members: 1447, region: "الوسط الغربي", coordinator_name: "منسق قفصة" },
+      "Touzer":      { members: 972, region: "الجنوب", coordinator_name: "منسق توزر" },
+      "Kebili":      { members: 802, region: "الجنوب", coordinator_name: "منسق قبلي" },
+      "Gabes":     { members: 3806, region: "الجنوب", coordinator_name: "منسق قابس" },
+      "Mednine":   { members: 2754, region: "الجنوب", coordinator_name: "منسق مدنين" },
+      "Tataouine": { members: 883, region: "الجنوب", coordinator_name: "منسق تطاوين" }
+    };
 
-  <script>
-    const regionData = {
-      "الشمال الشرقي": { coordinator_name: "صوفية الجلالي", coordinator_image: "image.jpg" },
-      "الشمال الغربي": { coordinator_name: "الاسم واللقب", coordinator_image: "image.jpg" },
-      "الوسط الشرقي": { coordinator_name: "الاسم واللقب", coordinator_image: "image.jpg" },
-      "الوسط الغربي": { coordinator_name: "الاسم واللقب", coordinator_image: "image.jpg" },
-      "الجنوب":       { coordinator_name: "الاسم واللقب", coordinator_image: "image.jpg" }
-    };
-    
-    const governorateData = {
-      "Tunis":     { members: 1748, region: "الشمال الشرقي", coordinator_name: "منسق تونس" },
-      "Ariana":      { members: 1074, region: "الشمال الشرقي", coordinator_name: "منسق أريانة" },
-      "Ben Arous": { members: 1559, region: "الشمال الشرقي", coordinator_name: "هاجر السيد" },
-      "Manouba":   { members: 887, region: "الشمال الشرقي", coordinator_name: "حامد الدريدي" },
-      "Nabel":     { members: 1494, region: "الشمال الشرقي", coordinator_name: "منسق نابل" },
-      "Zagouen":   { members: 300, region: "الشمال الشرقي", coordinator_name: "منسق زغوان" },
-      "Bizerte":   { members: 1004, region: "الشمال الشرقي", coordinator_name: "منسق بنزرت" },
-      "Beja":        { members: 369, region: "الشمال الغربي", coordinator_name: "منسق باجة" },
-      "Jandouba":    { members: 646, region: "الشمال الغربي", coordinator_name: "منسق جندوبة" },
-      "Le kef":      { members: 831, region: "الشمال الغربي", coordinator_name: "منسق الكاف" },
-      "Siliana":   { members: 234, region: "الشمال الغربي", coordinator_name: "منسق سليانة" },
-      "Sousse":      { members: 1376, region: "الوسط الشرقي", coordinator_name: "منسق سوسة" },
-      "Monastir":    { members: 1091, region: "الوسط الشرقي", coordinator_name: "منسق المنستير" },
-      "Mahdia":      { members: 746, region: "الوسط الشرقي", coordinator_name: "منسق المهدية" },
-      "Sfax":        { members: 1461, region: "الوسط الشرقي", coordinator_name: "منسق صفاقس" },
-      "Kairouan":    { members: 618, region: "الوسط الغربي", coordinator_name: "منسق القيروان" },
-      "kasserine": { members: 485, region: "الوسط الغربي", coordinator_name: "منسق القصرين" },
-      "Sidi Bouzid":{ members: 968, region: "الوسط الغربي", coordinator_name: "منسق سيدي بوزيد" },
-      "Gafsa":     { members: 1447, region: "الوسط الغربي", coordinator_name: "منسق قفصة" },
-      "Touzer":      { members: 972, region: "الجنوب", coordinator_name: "منسق توزر" },
-      "Kebili":      { members: 802, region: "الجنوب", coordinator_name: "منسق قبلي" },
-      "Gabes":     { members: 3806, region: "الجنوب", coordinator_name: "منسق قابس" },
-      "Mednine":   { members: 2754, region: "الجنوب", coordinator_name: "منسق مدنين" },
-      "Tataouine": { members: 883, region: "الجنوب", coordinator_name: "منسق تطاوين" }
-    };
+    const formsLinks = {
+      "Ariana": "https://hexaflexagon-mushroom-czyl.squarespace.com/anmeldung-ariana",
+      "Beja": "https://hexaflexagon-mushroom-czyl.squarespace.com/anmeldung-beja",
+      "Ben Arous": "https://hexaflexagon-mushroom-czyl.squarespace.com/anmeldung-ben-arous",
+      "Bizerte": "https://sites.google.com/view/bizerte1/accueil",
+      "Gabes": "https://hexaflexagon-mushroom-czyl.squarespace.com/anmeldung-gabes",
+      "Gafsa": "https://hexaflexagon-mushroom-czyl.squarespace.com/anmeldung-gafsa",
+      "Jandouba": "https://hexaflexagon-mushroom-czyl.squarespace.com/anmeldung-jandouba",
+      "Kairouan": "https://hexaflexagon-mushroom-czyl.squarespace.com/anmeldung-kairouan",
+      "Kasserine": "https://hexaflexagon-mushroom-czyl.squarespace.com/anmeldung-kasserine",
+      "Kebili": "https://hexaflexagon-mushroom-czyl.squarespace.com/anmeldung-kebili",
+      "Le Kef": "https://hexaflexagon-mushroom-czyl.squarespace.com/anmeldung-le-kef",
+      "Mahdia": "https://hexaflexagon-mushroom-czyl.squarespace.com/anmeldung-mahdia",
+      "Manouba": "https://hexaflexagon-mushroom-czyl.squarespace.com/anmeldung-manouba",
+      "Mednine": "https://hexaflexagon-mushroom-czyl.squarespace.com/anmeldung-medenine",
+      "Monastir": "https://hexaflexagon-mushroom-czyl.squarespace.com/anmeldung-monastir",
+      "Nabel": "https://hexaflexagon-mushroom-czyl.squarespace.com/anmeldung-nabeul",
+      "Sfax": "https://hexaflexagon-mushroom-czyl.squarespace.com/anmeldung-sfax",
+      "Sidi Bouzid": "https://hexaflexagon-mushroom-czyl.squarespace.com/anmeldung-sidi-bouzid",
+      "Siliana": "https://hexaflexagon-mushroom-czyl.squarespace.com/anmeldung-siliana",
+      "Sousse": "https://hexaflexagon-mushroom-czyl.squarespace.com/anmeldung-sousse",
+      "Tataouine": "https://hexaflexagon-mushroom-czyl.squarespace.com/anmeldung-tataouine",
+      "Touzer": "https://hexaflexagon-mushroom-czyl.squarespace.com/anmeldung-tozeur",
+      "Tunis": "https://hexaflexagon-mushroom-czyl.squarespace.com/anmeldung-tunis",
+      "Zagouen": "https://hexaflexagon-mushroom-czyl.squarespace.com/anmeldung-zaghouan"
+    };
 
-    const formsLinks = { /* روابط الاستمارات كما في الكود السابق */ };
+    const regionColors = { "الشمال الشرقي": "#0096c7", "الشمال الغربي": "#52b69a", "الوسط الشرقي": "#f77f00", "الوسط الغربي": "#ffe6a7", "الجنوب": "#e63946" };
 
-    const regionColors = { "الشمال الشرقي": "#0096c7", "الشمال الغربي": "#52b69a", "الوسط الشرقي": "#f77f00", "الوسط الغربي": "#ffe6a7", "الجنوب": "#e63946" };
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const loader = document.getElementById('loader');
+    const regionFilter = document.getElementById('region-filter');
+    const legendContainer = document.getElementById('legend-container');
+    const toggleButton = document.getElementById('toggle-legend-btn');
+    const map = L.map('map', { center: [34, 9.5], zoom: 7, zoomControl: false, attributionControl: false });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {}).addTo(map);
+    let geojsonLayer;
+    let lastSelectedLayer = null;
+    const regionBounds = {}, gouvFrToAr = {}, layersByGouvFr = {};
 
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    const loader = document.getElementById('loader');
-    const regionFilter = document.getElementById('region-filter');
-    const legendContainer = document.getElementById('legend-container');
-    const toggleButton = document.getElementById('toggle-legend-btn');
-    const map = L.map('map', { center: [34, 9.5], zoom: 7, zoomControl: false, attributionControl: false });
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {}).addTo(map);
-    let geojsonLayer;
-    let lastSelectedLayer = null;
-    const regionBounds = {}, gouvFrToAr = {}, layersByGouvFr = {};
+    function style(feature) {
+      const region = governorateData[feature.properties.gouv_fr]?.region;
+      return { fillColor: regionColors[region] || '#cccccc', weight: 1.5, opacity: 1, color: 'white', fillOpacity: 0.85 };
+    }
 
-    function style(feature) {
-      const region = governorateData[feature.properties.gouv_fr]?.region;
-      return { fillColor: regionColors[region] || '#cccccc', weight: 1.5, opacity: 1, color: 'white', fillOpacity: 0.85 };
-    }
+    function buildLegend() {
+      let html = '<h4>الأقاليم والمنسقين</h4>';
+      for (const regionName in regionData) {
+        const regionInfo = regionData[regionName];
+        html += `<div class="legend-region">
+                  <h5><span class="region-icon" style="background:${regionColors[regionName]}"></span>${regionName}</h5>
+                  <p><strong>المنسق الإقليمي:</strong> ${regionInfo.coordinator_name}</p><ul>`;
+        for (const gouvFr in governorateData) {
+          if (governorateData[gouvFr].region === regionName) {
+            const gouvData = governorateData[gouvFr];
+            const gouvAr = gouvFrToAr[gouvFr] || gouvFr;
+            const memberDisplay = gouvData.members > 0 ? `<span class="member-count">(${gouvData.members.toLocaleString('ar')})</span>` : '';
+            html += `<li data-gouv-fr="${gouvFr}"><span class="gov-name">${gouvAr}</span><div>${memberDisplay}<span class="coordinator-name">${gouvData.coordinator_name}</span></div></li>`;
+          }
+        }
+        html += `</ul></div>`;
+      }
+      legendContainer.innerHTML = html;
+    }
 
-    function buildLegend() {
-      let html = '<h4>الأقاليم والمنسقين</h4>';
-      for (const regionName in regionData) {
-        const regionInfo = regionData[regionName];
-        html += `<div class="legend-region">
-                  <h5><span class="region-icon" style="background:${regionColors[regionName]}"></span>${regionName}</h5>
-                  <p><strong>المنسق الإقليمي:</strong> ${regionInfo.coordinator_name}</p><ul>`;
-        for (const gouvFr in governorateData) {
-          if (governorateData[gouvFr].region === regionName) {
-            const gouvData = governorateData[gouvFr];
-            const gouvAr = gouvFrToAr[gouvFr] || gouvFr;
-            const memberDisplay = gouvData.members > 0 ? `<span class="member-count">(${gouvData.members.toLocaleString('ar')})</span>` : '';
-            html += `<li data-gouv-fr="${gouvFr}"><span class="gov-name">${gouvAr}</span><div>${memberDisplay}<span class="coordinator-name">${gouvData.coordinator_name}</span></div></li>`;
-          }
-        }
-        html += `</ul></div>`;
-      }
-      legendContainer.innerHTML = html;
-  D }
+    fetch('TN-gouvernorats.geojson')
+      .then(res => res.json())
+      .then(geojson => {
+        const regions = new Set();
+        geojson.features.forEach(feature => {
+            const gouvFr = feature.properties.gouv_fr;
+            gouvFrToAr[gouvFr] = feature.properties.gouv_ar || gouvFr;
+            layersByGouvFr[gouvFr] = null;
+            const data = governorateData[gouvFr];
+            if (data && data.region) {
+                regions.add(data.region);
+                const layerBounds = L.geoJSON(feature).getBounds();
+                if (!regionBounds[data.region]) { regionBounds[data.region] = layerBounds; } 
+                else { regionBounds[data.region].extend(layerBounds); }
+            }
+        });
+        regions.forEach(region => {
+            const option = document.createElement('option');
+            option.value = region;
+            option.textContent = region;
+            regionFilter.appendChild(option);
+        });
 
-    fetch('TN-gouvernorats.geojson')
-      .then(res => res.json())
-      .then(geojson => {
-        const regions = new Set();
-        geojson.features.forEach(feature => {
-            const gouvFr = feature.properties.gouv_fr;
-            gouvFrToAr[gouvFr] = feature.properties.gouv_ar || gouvFr;
-            layersByGouvFr[gouvFr] = null;
-            const data = governorateData[gouvFr];
-            if (data && data.region) {
-                regions.add(data.region);
-                const layerBounds = L.geoJSON(feature).getBounds();
-                if (!regionBounds[data.region]) { regionBounds[data.region] = layerBounds; } 
-                else { regionBounds[data.region].extend(layerBounds); }
-            }
-        });
-        regions.forEach(region => {
-            const option = document.createElement('option');
-            option.value = region;
-            option.textContent = region;
-            regionFilter.appendChild(option);
-        });
+        geojsonLayer = L.geoJSON(geojson, {
+          style: style,
+          onEachFeature: function(feature, layer) {
+            const props = feature.properties;
+            const gouvNameFr = props.gouv_fr;
+            layersByGouvFr[gouvNameFr] = layer;
+            const gouvData = governorateData[gouvNameFr];
+            const formUrl = formsLinks[gouvNameFr];
 
-        geojsonLayer = L.geoJSON(geojson, {
-          style: style,
-          onEachFeature: function(feature, layer) {
-            const props = feature.properties;
-            const gouvNameFr = props.gouv_fr;
-            layersByGouvFr[gouvNameFr] = layer;
-            const gouvData = governorateData[gouvNameFr];
-            const formUrl = formsLinks[gouvNameFr];
+            // Popup
+            let popupText = `<h3 style="margin:0;">${gouvFrToAr[gouvNameFr]}</h3>`;
+            if (gouvData) {
+                if (gouvData.members > 0) popupText += `<p>عدد الأعضاء: ${gouvData.members.toLocaleString('ar')}</p>`;
+                if (gouvData.coordinator_name) popupText += `<p>المنسق الإقليمي: ${gouvData.coordinator_name}</p>`;
+            }
+            if (formUrl) popupText += `<a href="${formUrl}" target="_blank" class="popup-link">فتح استمارة التسجيل</a>`;
+            layer.bindPopup(popupText, { minWidth: 180 });
 
-            let popupText = `<h3 style="margin:0;">${gouvFrToAr[gouvNameFr]}</h3>`;
-            if (gouvData) {
-                if (gouvData.members > 0) popupText += `<p>عدد الأعضاء: ${gouvData.members.toLocaleString('ar')}</p>`;
-                if (gouvData.coordinator_name) popupText += `<p>المنسق الإقليمي: ${gouvData.coordinator_name}</p>`;
-            }
-            if (formUrl) popupText += `<a href="${formUrl}" target="_blank" class="popup-link">فتح استمارة التسجيل</a>`;
-            layer.bindPopup(popupText, { minWidth: 180 });
+            // Tooltip
+            let tooltipContent = `<b>${gouvFrToAr[gouvNameFr]}</b>`;
+            if(gouvData) {
+                if (gouvData.members > 0) tooltipContent += `<br>عدد الأعضاء: ${gouvData.members.toLocaleString('ar')}`;
+                if (gouvData.coordinator_name) tooltipContent += `<br>المنسق: ${gouvData.coordinator_name}`;
+            }
+            layer.bindTooltip(tooltipContent, { sticky: true, direction: 'top', className: 'custom-tooltip' });
 
-            let tooltipContent = `<b>${gouvFrToAr[gouvNameFr]}</b>`;
-            if(gouvData) {
-                if (gouvData.members > 0) tooltipContent += `<br>عدد الأعضاء: ${gouvData.members.toLocaleString('ar')}`;
-                if (gouvData.coordinator_name) tooltipContent += `<br>المنسق: ${gouvData.coordinator_name}`;
-            }
-            layer.bindTooltip(tooltipContent, { sticky: true, direction: 'top', className: 'custom-tooltip' });
+            // Hover / Click
+            if (isTouchDevice) {
+              layer.on('click', e => {
+                  if (lastSelectedLayer) geojsonLayer.resetStyle(lastSelectedLayer);
+                  e.target.setStyle({ weight: 3, color: '#333', fillOpacity: 1 });
+                  lastSelectedLayer = e.target;
+                  layer.openPopup();
+              });
+            } else {
+              layer.on({
+                mouseover: e => { if (regionFilter.value==='all') e.target.setStyle({ weight: 3, color: '#333', fillOpacity: 1 }); },
+                mouseout: e => { if (regionFilter.value==='all') geojsonLayer.resetStyle(e.target); },
+                click: e => { if (formUrl) window.open(formUrl, '_blank'); }
+              });
+            }
+          }
+        }).addTo(map);
 
-            if (isTouchDevice) {
-              layer.on('click', e => {
-                  if (lastSelectedLayer) geojsonLayer.resetStyle(lastSelectedLayer);
-                  e.target.setStyle({ weight: 3, color: '#333', fillOpacity: 1 });
-                  lastSelectedLayer = e.target;
-                  layer.openPopup();
-              });
-            } else {
-              layer.on({
-                mouseover: e => { if (regionFilter.value==='all') e.target.setStyle({ weight: 3, color: '#333', fillOpacity: 1 }); },
-                mouseout: e => { if (regionFilter.value==='all') geojsonLayer.resetStyle(e.target); },
-                click: e => { if (formUrl) window.open(formUrl, '_blank'); }
-              });
-            }
-          }
-        }).addTo(map);
+        const fullBounds = geojsonLayer.getBounds();
+        map.fitBounds(fullBounds);
+        map.setMaxBounds(fullBounds.pad(0.1));
+        buildLegend();
 
-        const fullBounds = geojsonLayer.getBounds();
-        map.fitBounds(fullBounds);
-        map.setMaxBounds(fullBounds.pad(0.1));
-        buildLegend();
+        toggleButton.addEventListener('click', e => { e.stopPropagation(); legendContainer.classList.toggle('visible'); });
+        map.on('click', () => legendContainer.classList.remove('visible'));
 
-        toggleButton.addEventListener('click', e => { e.stopPropagation(); legendContainer.classList.toggle('visible'); });
-        map.on('click', () => legendContainer.classList.remove('visible'));
+        regionFilter.addEventListener('change', function() {
+            const selectedRegion = this.value;
+            if (selectedRegion === 'all') {
+                map.fitBounds(fullBounds);
+                geojsonLayer.eachLayer(layer => geojsonLayer.resetStyle(layer));
+            } else {
+                map.fitBounds(regionBounds[selectedRegion]);
+                geojsonLayer.eachLayer(layer => {
+                    const gouvData = governorateData[layer.feature.properties.gouv_fr];
+                    if (gouvData && gouvData.region === selectedRegion) geojsonLayer.resetStyle(layer);
+                    else layer.setStyle({ fillOpacity: 0.1, weight: 0.5, color: '#ccc' });
+                });
+            }
+        });
 
-        regionFilter.addEventListener('change', function() {
-            const selectedRegion = this.value;
-            if (selectedRegion === 'all') {
-                map.fitBounds(fullBounds);
-                geojsonLayer.eachLayer(layer => geojsonLayer.resetStyle(layer));
-            } else {
-                map.fitBounds(regionBounds[selectedRegion]);
-                geojsonLayer.eachLayer(layer => {
-                    const gouvData = governorateData[layer.feature.properties.gouv_fr];
-                    if (gouvData && gouvData.region === selectedRegion) geojsonLayer.resetStyle(layer);
-                    else layer.setStyle({ fillOpacity: 0.1, weight: 0.5, color: '#ccc' });
-                });
-            }
-        });
+        document.getElementById('reset-view-btn').addEventListener('click', () => {
+            regionFilter.value = 'all';
+            regionFilter.dispatchEvent(new Event('change'));
+        });
 
-        document.getElementById('reset-view-btn').addEventListener('click', () => {
-            regionFilter.value = 'all';
-            regionFilter.dispatchEvent(new Event('change'));
-        });
+        legendContainer.querySelectorAll('li[data-gouv-fr]').forEach(item => {
+            const gouvFr = item.dataset.gouvFr;
+            const layer = layersByGouvFr[gouvFr];
+            if(layer) {
+                item.addEventListener('mouseover', () => { if(regionFilter.value==='all') layer.fire('mouseover'); });
+                item.addEventListener('mouseout', () => { if(regionFilter.value==='all') layer.fire('mouseout'); });
+                item.addEventListener('click', () => { if (isTouchDevice) layer.openPopup(); else layer.fire('click'); });
+            }
+        });
 
-        legendContainer.querySelectorAll('li[data-gouv-fr]').forEach(item => {
-            const gouvFr = item.dataset.gouvFr;
-            const layer = layersByGouvFr[gouvFr];
-            if(layer) {
-                item.addEventListener('mouseover', () => { if(regionFilter.value==='all') layer.fire('mouseover'); });
-                item.addEventListener('mouseout', () => { if(regionFilter.value==='all') layer.fire('mouseout'); });
-                item.addEventListener('click', () => { if (isTouchDevice) layer.openPopup(); else layer.fire('click'); });
-            }
-        });
-
-        // Loader يتم إخفاؤه هنا بعد تحميل الخريطة
-        loader.style.display = 'none'; 
-      });
-
-    // --- الكود الجديد لتحميل PDF ---
-    document.getElementById('download-pdf-btn').addEventListener('click', () => {
-        const btn = document.getElementById('download-pdf-btn');
-        const mapElement = document.getElementById('map-wrapper');
-        const legendElement = document.getElementById('legend-container');
-        const loader = document.getElementById('loader'); // استخدام نفس الـ loader
-
-        // --- 0. إظهار حالة التحميل ---
-        const originalText = btn.textContent;
-        btn.textContent = '...جاري التحضير';
-        btn.disabled = true;
-        loader.style.display = 'block'; // إظهار الـ loader
-
-        // --- 1. التقاط الخريطة كصورة ---
-        html2canvas(mapElement, { 
-            useCORS: true, // ضروري لالتقاط طبقات الخريطة
-            allowTaint: true 
-        }).then(mapCanvas => {
-            const mapImgData = mapCanvas.toDataURL('image/png');
-            const mapWidth = mapCanvas.width;
-            const mapHeight = mapCanvas.height;
-
-            const { jsPDF } = window.jspdf;
-            
-            // --- 2. إنشاء ملف PDF ---
-            // استخدام قياس A4 (تقريبا 595 * 842 نقطة)
-            const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const margin = 40; // هامش 40 نقطة
-            const usableWidth = pdfWidth - (margin * 2);
-            
-            // --- 3. إضافة الخريطة إلى الصفحة الأولى ---
-            // حساب أبعاد الخريطة المتناسبة مع عرض الصفحة
-            const ratio = usableWidth / mapWidth;
-            const scaledHeight = mapHeight * ratio;
-            
-            // إضافة عنوان للخريطة (يحتاج خط يدعم العربية أو سيظهر كـ ؟؟؟)
-            // pdf.text('Map Report - Tunisia', pdfWidth / 2, margin, { align: 'center' }); // عنوان مؤقت
-            
-            pdf.addImage(mapImgData, 'PNG', margin, margin, usableWidth, scaledHeight);
-
-            // --- 4. إضافة الدليل (Legend) كنص HTML ---
-            pdf.addPage();
-            
-            // التأكد من أن الدليل ظاهر (خاصة في الموبايل)
-            const legendWasHidden = !legendElement.classList.contains('visible') && window.innerWidth <= 768;
-            if (legendWasHidden) {
-                legendElement.classList.add('visible');
-            }
-            // ضمان التقاط المحتوى كاملاً من الأعلى
-            legendElement.scrollTop = 0;
-
-            pdf.html(legendElement, {
-                callback: function (doc) {
-                    // --- 5. الحفظ وإعادة الوضع ---
-                    doc.save('Tunisia-Report.pdf');
-                    
-                    // إعادة الزر والتحميل لوضعهم الأصلي
-                    loader.style.display = 'none'; // إخفاء الـ loader
-                    btn.textContent = originalText;
-                    btn.disabled = false;
-                    if (legendWasHidden) {
-                        legendElement.classList.remove('visible');
-                    }
-                },
-                x: margin,
-                y: margin,
-                width: usableWidth, // جعل عرض المحتوى يناسب الصفحة
-                windowWidth: legendElement.scrollWidth, // إخبار jsPDF بالعرض الحقيقي للمحتوى
-                autoPaging: 'text' // السماح بتقسيم الصفحات تلقائياً
-            });
-
-        }).catch(err => {
-            console.error("فشل إنشاء PDF:", err);
-            alert("حدث خطأ أثناء تحميل الـ PDF.");
-            // إعادة الوضع في حالة الفشل
-            loader.style.display = 'none';
-            btn.textContent = originalText;
-            btn.disabled = false;
-        });
-    });
-  </script>
+        loader.style.display = 'none';
+      });
+  </script>
 </body>
 </html>
